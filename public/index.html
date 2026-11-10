@@ -430,7 +430,10 @@
         <h3 style="font-weight: 800; color: var(--primary);">دخول لجنة الإسكان والإدارة</h3>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">أدخل رمز المرور السري للتحكم في المنظومة وإجراء المطابقة الآلية</p>
         
-        <input type="password" id="admin-pin-input" class="form-control" placeholder="رمز المرور (الافتراضي: 2026)" style="text-align: center; font-size: 1.25rem; letter-spacing: 4px; margin-bottom: 1rem;">
+        <div style="position: relative; margin-bottom: 1rem;">
+          <input type="password" id="admin-pin-input" class="form-control" placeholder="أدخل كلمة مرور الإدارة السرية" style="text-align: center; font-size: 1.05rem; padding-left: 2.75rem;" autocomplete="current-password">
+          <button type="button" onclick="togglePinVisibility()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.15rem; opacity: 0.65;" title="إظهار / إخفاء كلمة المرور">👁️</button>
+        </div>
         <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">دخول لوحة التحكم 🚀</button>
       </div>
 
@@ -444,6 +447,7 @@
             <span style="background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">جلسة مؤمنة بنجاح</span>
           </div>
           <div style="display: flex; gap: 0.5rem;">
+            <a href="/api/admin/backup-db" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">📥 تحميل نسخة احتياطية من قاعدة البيانات</a>
             <button type="button" class="btn btn-outline btn-sm" onclick="showChangePasswordModal()">🔑 تغيير كلمة مرور الإدارة</button>
             <button type="button" class="btn btn-danger btn-sm" onclick="adminLogout()">🚪 خروج</button>
           </div>

@@ -2097,3 +2097,10 @@ function closeCycleModal() {
   const modal = document.getElementById("cycle-modal");
   if (modal) modal.style.display = "none";
 }
+
+
+function togglePinVisibility() {
+  const pinInput = document.getElementById("admin-pin-input");
+  if (!pinInput) return;
+  pinInput.type = pinInput.type === "password" ? "text" : "password";
+}

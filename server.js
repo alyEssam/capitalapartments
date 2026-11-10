@@ -204,7 +204,7 @@ const server = http.createServer(async (req, res) => {
         // 5b. Admin Login Verification
     if (pathname === "/api/admin/login" && method === "POST") {
       const body = await parseBody(req);
-      const storedPin = db.getSetting("admin_pin", "2026");
+      const storedPin = db.getSetting("admin_pin", "Capital@Housing#2026!Adm");
       if (body.pin && String(body.pin).trim() === String(storedPin).trim()) {
         return sendJson(res, 200, { success: true, message: "تم تسجيل الدخول بنجاح" });
       }
@@ -212,9 +212,27 @@ const server = http.createServer(async (req, res) => {
     }
 
     // 5c. Admin Change Password
+        // 5d. Admin Download Database Backup
+    if (pathname === "/api/admin/backup-db" && method === "GET") {
+      try {
+        const dbPath = path.join(__dirname, "data", "housing.db");
+        try { db.db.exec("PRAGMA wal_checkpoint(TRUNCATE);"); } catch(e) {}
+        const filename = "housing_backup_" + new Date().toISOString().slice(0, 10) + ".db";
+        res.writeHead(200, {
+          "Content-Type": "application/octet-stream",
+          "Content-Disposition": 'attachment; filename="' + filename + '"'
+        });
+        const readStream = fs.createReadStream(dbPath);
+        readStream.pipe(res);
+        return;
+      } catch (err) {
+        return sendJson(res, 500, { success: false, message: "فشل تحميل نسخة قاعدة البيانات" });
+      }
+    }
+
     if (pathname === "/api/admin/change-password" && method === "POST") {
       const body = await parseBody(req);
-      const storedPin = db.getSetting("admin_pin", "2026");
+      const storedPin = db.getSetting("admin_pin", "Capital@Housing#2026!Adm");
       if (!body.oldPin || String(body.oldPin).trim() !== String(storedPin).trim()) {
         return sendJson(res, 400, { success: false, message: "كلمة المرور الحالية غير صحيحة" });
       }
