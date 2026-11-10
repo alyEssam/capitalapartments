@@ -180,10 +180,10 @@
                 <input type="radio" name="swap-status-radio" value="WANTS_SWAP" checked style="margin-top: 4px;">
                 <div>
                   <div style="font-weight: 800; color: #166534; font-size: 0.95rem;">
-                    🔄 أرغب في التبديل وإتاحة شقتي للتواصل المباشر (One-to-One)
+                    🔄 أرغب في التبديل وإتاحة شقتي للتواصل المباشر (One-to-One) أو التبادل المتعدد (One-to-Many)
                   </div>
                   <div style="font-size: 0.82rem; color: #15803d; margin-top: 2px;">
-                    ستظهر شقتك في الكتالوج كشقة معروضة للتبادل مع إتاحة أزرار الاتصال والواتساب المباشر لزملائك للتنسيق الودي، وستدخل أيضاً في القرعة التبادلية لاحقاً إذا رغبت.
+                    ستظهر شقتك في الكتالوج كشقة معروضة للتبادل مع إتاحة أزرار الاتصال والواتساب المباشر لزملائك للتنسيق الودي (One-to-One)، أو دخول القرعة وترتيب الرغبات التبادلية (One-to-Many).
                   </div>
                 </div>
               </div>
@@ -580,7 +580,7 @@
               <input type="text" id="admin-single-user-q" class="form-control" placeholder="الرقم القومي للموظف أو الرقم العقاري للشقة..." style="width: 280px;">
               <select id="admin-single-user-status" class="form-select" style="width: auto;">
                 <option value="AGREED_DIRECT">🤝 تم التوافق الودي ولا أرغب في التبديل</option>
-                <option value="WANTS_SWAP">🔄 أرغب في التبديل وإتاحة شقتي للتواصل المباشر</option>
+                <option value="WANTS_SWAP">🔄 أرغب في التبديل (One-to-One أو One-to-Many)</option>
                 <option value="KEPT_ORIGINAL">🛡️ محتفظ بالشقة الأصلية (لا أرغب في التبديل)</option>
               </select>
               <button type="button" class="btn btn-outline btn-sm" onclick="submitSingleUserStatusUpdate()">💾 حفظ الحالة وتحديث الشقة</button>

@@ -709,7 +709,7 @@ function renderReceipt(user) {
   container.style.display = "block";
   const originalApt = state.apartments.find(a => a.id === user.original_apartment_id);
 
-  let statusLabel = 'أرغب في التبديل والتواصل المباشر (One-to-One)';
+  let statusLabel = 'أرغب في التبديل وإتاحة شقتي للتواصل المباشر (One-to-One) أو التبادل المتعدد (One-to-Many)';
   let statusColor = '#16a34a';
   if (user.swap_status === 'AGREED_DIRECT') {
     statusLabel = 'تم التوافق الودي ولا أرغب في التبديل';
