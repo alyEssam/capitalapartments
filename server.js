@@ -75,6 +75,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === "/api/stats" && method === "GET") {
       const stats = db.getStats();
       const settings = db.getAllSettings();
+      delete settings.admin_pin; // Protect admin PIN from public API
       return sendJson(res, 200, { success: true, stats, settings });
     }
 
