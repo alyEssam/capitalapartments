@@ -1,0 +1,16 @@
+﻿{
+  "name": "apartment-swap-platform",
+  "version": "1.0.0",
+  "description": "منظومة تبادل وتوفيق رغبات شقق الإسكان للموظفين",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "keywords": ["housing-swap", "top-trading-cycles", "matching-algorithm"],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منظومة تبادل وتوفيق رغبات شقق الموظفين | كراسة الشروط الرسمية (1,100 وحدة)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">🏛️</div>
+        <div>
+          <h1 class="brand-title">منظومة تبادل وتوفيق رغبات شقق الموظفين بالعاصمة الإدارية</h1>
+          <p class="brand-subtitle">المنصة الرسمية المعتمدة لكراسة الشروط (1,100 وحدة سكنية: الحي R3 وجاردن سيتي R5 | 900 موظف)</p>
+        </div>
+      </div>
+
+      <div class="countdown-badge">
+        <span>🎲</span>
+        <span id="header-phase-indicator">المرحلة الحالية: حصر الشقق الأصلية والتواصل المباشر الثنائي (One-to-One)</span>
+      </div>
+
+      <nav class="nav-tabs">
+        <button class="nav-btn active" data-tab="tab-register">✍️ تسجيل البيانات والتواصل</button>
+        <button class="nav-btn" data-tab="tab-catalog">🏢 كتالوج كراسة الشروط والتواصل (1,100 وحدة)</button>
+        <button class="nav-btn" data-tab="tab-results">🔍 استعلام النتيجة الرسمية</button>
+        <button class="nav-btn" data-tab="tab-admin">⚙️ لوحة الإدارة ولجنة التبديل</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <div id="toast-container"></div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: REGISTRATION & PREFERENCE RANKING -->
+    <!-- ======================================================== -->
+    <section id="tab-register" class="tab-pane active">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">📝 استمارة تسجيل بيانات الموظف وتحديد حالة التبديل</h2>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">
+              البيانات مطابقة تماماً لكراسة الشروط الرسمية (1,100 وحدة سكنية موزعة على الحي R3 وحي R5)
+            </span>
+          </div>
+          <span class="badge-official">كراسة الشروط المعتمدة 2026</span>
+        </div>
+
+        <!-- Official Notice Banner Dynamic -->
+        <div id="phase1-official-banner" class="official-notice-banner">
+          <div style="display: flex; gap: 0.85rem; align-items: flex-start;">
+            <span style="font-size: 2rem; line-height: 1;">📢</span>
+            <div>
+              <div style="font-weight: 800; font-size: 1.05rem; color: #b45309; margin-bottom: 0.35rem;">
+                تنبيه رسمي: مرحلة تسجيل الرغبات مغلقة حالياً، والنظام مخصص الآن لحصر وحدات الفائزة وإتاحة التواصل المباشر بين الزملاء الراغبين في التبديل الثنائي (One-to-One). سيتم فتح تسجيل الرغبات لاحقاً
+              </div>
+              <div style="font-size: 0.88rem; color: #92400e; line-height: 1.6;">
+                يرجى من جميع الزملاء الفائزين بالوحدات تسجيل بياناتهم والشقة الأصلية التي رست عليهم بالقرعة. سيتم عرض شقتك في كتالوج كراسة الشروط مع إتاحة وسيلة التواصل (الهاتف والواتساب) للزملاء الراغبين في التبديل معك ودياً.
+              </div>
+            </div>
+          </div>
+        </div>
+
+                <!-- Phase 3 Complete Registration Lockdown Card -->
+        <div id="phase3-closed-card" style="display: none; background: #f0fdf4; border: 2px solid #16a34a; border-radius: 12px; padding: 2.5rem 1.5rem; text-align: center; margin-bottom: 1.5rem; box-shadow: var(--shadow-md);">
+          <div style="font-size: 3.5rem; margin-bottom: 0.75rem;">🏆</div>
+          <h3 style="font-weight: 800; color: #166534; font-size: 1.4rem; margin-bottom: 0.5rem;">
+            تم إغلاق باب التسجيل وتعديل الرغبات رسمياً لاعتماد وإعلان النتائج النهائية
+          </h3>
+          <p style="font-size: 0.95rem; color: #15803d; max-width: 650px; margin: 0 auto 1.5rem; line-height: 1.7;">
+            انتهت مرحلة حصر الشقق وتسجيل الرغبات التبادلية، وتم إجراء التوفيق الإلكتروني العادل بالقرعة العشوائية المعتمدة. لا يُسمح حالياً بتعديل أي بيانات أو خيارات، ويمكن لجميع الزملاء الاستعلام عن الشقق المخصصة لهم نهائياً الآن.
+          </p>
+          <button type="button" class="btn btn-accent" style="padding: 0.9rem 2.5rem; font-size: 1.1rem; font-weight: 800; box-shadow: var(--shadow-md); cursor: pointer;" onclick="switchToResultsTab()">
+            🔍 الانتقال إلى شاشة استعلام النتيجة الرسمية بالرقم القومي ⬅️
+          </button>
+        </div>
+
+        <form id="registration-form">
+          <!-- 1. Employee Info with Ministry / Workplace -->
+          <div class="grid-4" style="margin-bottom: 1.25rem; gap: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label">الاسم بالكامل (رباعي) *</label>
+              <input type="text" id="reg-name" class="form-control" placeholder="أدخل اسمك كما بالرقم القومي" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">الرقم القومي (14 رقم) *</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="reg-nid" class="form-control" maxlength="14" placeholder="مثال: 28509150101234" required>
+                <button type="button" class="btn btn-outline btn-sm" style="white-space: nowrap;" onclick="lookupExistingUserPreferences()" title="إذا كنت مسجلاً مسبقاً، استرجع بياناتك لتعديلها">
+                  📥 استرجاع
+                </button>
+              </div>
+              <div id="nid-feedback" class="form-help">يتم استخراج السن تلقائياً</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">رقم الهاتف المحمول *</label>
+              <input type="tel" id="reg-phone" class="form-control" placeholder="مثال: 01012345678" required>
+              <div class="form-help">للتواصل المباشر والواتساب</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">اسم الوزارة / جهة العمل *</label>
+              <input type="text" id="reg-workplace" class="form-control" placeholder="مثال: وزارة الإسكان / مجلس الوزراء" required>
+              <div class="form-help">لتسهيل التنسيق مع الزملاء</div>
+            </div>
+          </div>
+
+          <!-- 2. Hierarchical Won Apartment Selector -->
+          <div class="selector-box">
+            <div style="font-weight: 800; color: var(--primary); margin-bottom: 0.75rem; font-size: 1.05rem;">
+              🔑 تحديد الشقة التي رست عليك في القرعة (من كراسة الشروط الرسمية):
+            </div>
+            
+            <div class="grid-4" style="gap: 0.75rem;">
+              <div class="form-group">
+                <label class="form-label">1. الحي *</label>
+                <select id="reg-district-select" class="form-select" onchange="onDistrictSelected()">
+                  <option value="">-- اختر الحي --</option>
+                  <option value="R3">الحي الثالث (R3) - 280 وحدة</option>
+                  <option value="R5">جاردن سيتي (R5) - 820 وحدة</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">2. المجاورة *</label>
+                <select id="reg-nh-select" class="form-select" onchange="onNeighborhoodSelected()" disabled>
+                  <option value="">-- اختر الحي أولاً --</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">3. رقم المبنى / العمارة *</label>
+                <select id="reg-bldg-select" class="form-select" onchange="onBuildingSelected()" disabled>
+                  <option value="">-- اختر المجاورة أولاً --</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">4. رقم الوحدة *</label>
+                <select id="reg-unit-select" class="form-select" onchange="onUnitSelected()" disabled required>
+                  <option value="">-- اختر المبنى أولاً --</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Instant Search by National Property ID -->
+            <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); white-space: nowrap;">أو بحث سريع برقم الوحدة العقاري:</span>
+              <input type="text" id="reg-quick-nid" class="form-control" placeholder="أدخل الرقم القومي العقاري للوحدة (20 رقم)" oninput="onQuickPropertyIdInput()">
+            </div>
+
+            <!-- Owned Apartment Preview -->
+            <div id="owned-apt-preview" style="display: none; background: white; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 1rem; margin-top: 1rem;">
+              <div style="font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🏢</span>
+                <span>بيانات شقتك المسجلة من واقع كراسة الشروط:</span>
+              </div>
+              <div id="owned-apt-details" class="details-grid"></div>
+            </div>
+          </div>
+
+          <!-- 3. Explicit Swap Status Selection (3 choices) -->
+          <div class="decision-card" style="margin-top: 1.25rem;">
+            <div style="font-weight: 800; font-size: 1.05rem; color: #166534; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+              <span>⚖️</span>
+              <span>تحديد الموقف من التبديل والشقة الأصلية:</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <div class="decision-choice-3 selected" id="choice-status-swap" onclick="setSwapStatus('WANTS_SWAP')">
+                <input type="radio" name="swap-status-radio" value="WANTS_SWAP" checked style="margin-top: 4px;">
+                <div>
+                  <div style="font-weight: 800; color: #166534; font-size: 0.95rem;">
+                    🔄 أرغب في التبديل وإتاحة شقتي للتواصل المباشر (One-to-One)
+                  </div>
+                  <div style="font-size: 0.82rem; color: #15803d; margin-top: 2px;">
+                    ستظهر شقتك في الكتالوج كشقة معروضة للتبادل مع إتاحة أزرار الاتصال والواتساب المباشر لزملائك للتنسيق الودي، وستدخل أيضاً في القرعة التبادلية لاحقاً إذا رغبت.
+                  </div>
+                </div>
+              </div>
+
+              <div class="decision-choice-3" id="choice-status-agreed" onclick="setSwapStatus('AGREED_DIRECT')">
+                <input type="radio" name="swap-status-radio" value="AGREED_DIRECT" style="margin-top: 4px;">
+                <div>
+                  <div style="font-weight: 800; color: #b45309; font-size: 0.95rem;">
+                    🤝 تم التوافق الودي ولا أرغب في التبديل
+                  </div>
+                  <div style="font-size: 0.82rem; color: #92400e; margin-top: 2px;">
+                    إذا اتفقت بالفعل مع زميل بشكل ودي ومباشر (One-to-One)، اختر هذا الخيار لتأكيد التوفيق وإغلاق شقتك من العرض في القرعة.
+                  </div>
+                </div>
+              </div>
+
+              <div class="decision-choice-3" id="choice-status-kept" onclick="setSwapStatus('KEPT_ORIGINAL')">
+                <input type="radio" name="swap-status-radio" value="KEPT_ORIGINAL" style="margin-top: 4px;">
+                <div>
+                  <div style="font-weight: 800; color: #475569; font-size: 0.95rem;">
+                    🛡️ محتفظ بالشقة الأصلية (لا أرغب في التبديل)
+                  </div>
+                  <div style="font-size: 0.82rem; color: #64748b; margin-top: 2px;">
+                    لن تدخل شقتك في منظومة التبادل أو القرعة، ولن يتمكن أي زميل من أخذها أو طلبها، وتظل مسجلة باسمك بنسبة 100%.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phase 1 Placeholder notice for preferences -->
+          <div id="phase1-disabled-msg" style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 10px; padding: 1.5rem; text-align: center; margin-top: 1.25rem;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
+            <h4 style="font-weight: 800; color: var(--primary); margin-bottom: 0.3rem;">ترتيب الرغبات المتعددة (10 - 20 رغبة) مغلق حالياً</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 600px; margin: 0 auto;">
+              الموقع يعمل الآن بنظام <strong>الحصر والتواصل المباشر (One-to-One)</strong>. يرجى الاكتفاء بتسجيل شقتك وتحديد حالتك وحفظ البيانات. بعد انتهاء مرحلة التوفيق المباشر، ستقوم الإدارة بفتح شاشة ترتيب الرغبات التبادلية.
+            </p>
+          </div>
+
+          <!-- 4. Preference Builder Section (Only visible in Phase 2) -->
+          <div id="preference-builder-section" style="display: none; margin-top: 1.5rem;">
+            <div class="card" style="border: 2px solid var(--primary-light); background: #fafcff;">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">🎯 ترتيب رغبات التبديل (من الرغبة 1 حتى الرغبة 20)</h3>
+                  <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                    في حال تزاحم أكثر من موظف على نفس الرغبة الأولى، يتم الحسم بالرقم العشوائي المعتمد، ومن لم يحصل عليها ينظر النظام فوراً لرغبته الثانية فالثالثة.
+                  </p>
+                </div>
+                <div>
+                  <span id="pref-count-badge" class="badge-count">0 / 20 رغبة</span>
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <!-- Left: Catalog Quick Selector -->
+                <div>
+                  <div style="font-weight: 700; margin-bottom: 0.5rem;">تصفح واختيار شقق كراسة الشروط لإضافتها لرغباتك:</div>
+                  <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                    <select id="picker-filter-district" class="form-select" style="font-size: 0.85rem; flex: 1;" onchange="onPickerDistrictChanged()">
+                      <option value="">جميع الأحياء (R3 & R5)</option>
+                      <option value="R3">الحي الثالث (R3)</option>
+                      <option value="R5">جاردن سيتي (R5)</option>
+                    </select>
+
+                    <select id="picker-filter-nh" class="form-select" style="font-size: 0.85rem; flex: 1;" onchange="filterPickerApts()">
+                      <option value="">جميع المجاورات</option>
+                    </select>
+
+                    <select id="picker-filter-floor" class="form-select" style="font-size: 0.85rem; flex: 1;" onchange="filterPickerApts()">
+                      <option value="">جميع الأدوار</option>
+                      <option value="0">الدور الأرضي</option>
+                      <option value="1">الدور الأول</option>
+                      <option value="2">الدور الثاني</option>
+                      <option value="3">الدور الثالث</option>
+                      <option value="4">الدور الرابع</option>
+                      <option value="5">الدور الخامس</option>
+                      <option value="upper">الأدوار 6 - 9</option>
+                    </select>
+
+                    <select id="picker-filter-area" class="form-select" style="font-size: 0.85rem; flex: 1.2;" onchange="filterPickerApts()">
+                      <option value="">📐 جميع المساحات</option>
+                      <optgroup label="الحي الثالث (R3)">
+                        <option value="r3_114_122">R3: من 114 إلى 122 م²</option>
+                        <option value="r3_136_155">R3: من 136 إلى 155 م²</option>
+                        <option value="r3_170_173">R3: من 170 إلى 173 م²</option>
+                      </optgroup>
+                      <optgroup label="جاردن سيتي (R5)">
+                        <option value="r5_86_100">R5: من 86 إلى 100 م²</option>
+                        <option value="r5_100_120">R5: من 100 إلى 120 م²</option>
+                        <option value="r5_120_140">R5: من 120 إلى 140 م²</option>
+                        <option value="r5_140_160">R5: من 140 إلى 160 م²</option>
+                        <option value="r5_160_180">R5: من 160 إلى 180 م²</option>
+                        <option value="r5_180_200">R5: من 180 إلى 200 م²</option>
+                        <option value="r5_200_220">R5: من 200 إلى 220 م² فأكثر</option>
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  <input type="text" id="picker-search-input" class="form-control" placeholder="بحث برقم العمارة، رقم الوحدة، النموذج، أو الرقم العقاري..." style="font-size: 0.85rem; margin-bottom: 0.75rem;" oninput="filterPickerApts()">
+
+                  <div id="picker-apts-list" class="picker-list">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+
+                <!-- Right: Selected Ordered Preferences -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 700;">قائمة رغباتك المرتبة (حسب الأولوية):</span>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="clearAllPreferences()">مسح الكل 🗑️</button>
+                  </div>
+
+                  <div id="selected-preferences-container" class="preference-list">
+                    <div id="empty-pref-msg" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                      لم تختر أي رغبات بعد.<br>اختر شققاً من القائمة على اليمين لإضافتها حسب أولوياتك (من 10 إلى 20 رغبة).
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div style="text-align: center; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem; box-shadow: var(--shadow-lg);">
+              💾 حفظ البيانات وإصدار إيصال التسجيل الرسمي
+            </button>
+          </div>
+        </form>
+
+        <div id="receipt-container" style="display: none; margin-top: 2rem;"></div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: APARTMENT BROCHURE CATALOG (1,100 UNITS) -->
+    <!-- ======================================================== -->
+    <section id="tab-catalog" class="tab-pane">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">🏢 دليل كراسة شروط الشقق السكنية والتواصل المباشر (1,100 وحدة)</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+              جميع الوحدات الرسمية: الحي R3 (280 وحدة: D2, D7) | جاردن سيتي R5 (820 وحدة: CL32, CL33, CL39, CL40, CL85)
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <input type="text" id="catalog-search" class="form-control" placeholder="بحث بالرقم العقاري، العمارة، الوحدة، النموذج..." style="width: 280px;" oninput="onCatalogSearch()">
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+            <button class="btn btn-outline btn-sm active-filter" onclick="filterCatalogByDistrict('all', this)">الكل (1,100)</button>
+            <button class="btn btn-outline btn-sm" onclick="filterCatalogByDistrict('R3', this)">الحي R3 (280 وحدة)</button>
+            <button class="btn btn-outline btn-sm" onclick="filterCatalogByDistrict('R5', this)">جاردن سيتي R5 (820 وحدة)</button>
+            
+            <select id="catalog-nh-filter" class="form-select" style="width: auto; font-size: 0.85rem;" onchange="onCatalogNeighborhoodChanged()">
+              <option value="">جميع المجاورات</option>
+            </select>
+            
+            <select id="catalog-floor-filter" class="form-select" style="width: auto; font-size: 0.85rem;" onchange="onCatalogFloorChanged()">
+              <option value="">جميع الأدوار</option>
+              <option value="0">الدور الأرضي</option>
+              <option value="1">الدور الأول</option>
+              <option value="2">الدور الثاني</option>
+              <option value="3">الدور الثالث</option>
+              <option value="4">الدور الرابع</option>
+              <option value="5">الدور الخامس</option>
+              <option value="upper">الأدوار 6 - 9</option>
+            </select>
+
+            <select id="catalog-area-filter" class="form-select" style="width: auto; font-size: 0.85rem;" onchange="onCatalogAreaChanged()">
+              <option value="">📐 جميع المساحات</option>
+              <optgroup label="الحي الثالث (R3)">
+                <option value="r3_114_122">R3: من 114 إلى 122 م² (77 وحدة)</option>
+                <option value="r3_136_155">R3: من 136 إلى 155 م² (132 وحدة)</option>
+                <option value="r3_170_173">R3: من 170 إلى 173 م² (65 وحدة)</option>
+              </optgroup>
+              <optgroup label="جاردن سيتي (R5)">
+                <option value="r5_86_100">R5: من 86 إلى 100 م² (43 وحدة)</option>
+                <option value="r5_100_120">R5: من 100 إلى 120 م² (110 وحدة)</option>
+                <option value="r5_120_140">R5: من 120 إلى 140 م² (178 وحدة)</option>
+                <option value="r5_140_160">R5: من 140 إلى 160 م² (173 وحدة)</option>
+                <option value="r5_160_180">R5: من 160 إلى 180 م² (149 وحدة)</option>
+                <option value="r5_180_200">R5: من 180 إلى 200 م² (66 وحدة)</option>
+                <option value="r5_200_220">R5: من 200 إلى 220 م² فأكثر (101 وحدة)</option>
+              </optgroup>
+            </select>
+
+            <select id="catalog-status-filter" class="form-select" style="width: auto; font-size: 0.85rem; font-weight: 700;" onchange="onCatalogStatusFilterChanged()">
+              <option value="all">جميع الحالات</option>
+              <option value="WANTS_SWAP">🟢 متاح للتبادل والتواصل المباشر</option>
+              <option value="AGREED_DIRECT">🤝 تم التوافق الودي</option>
+              <option value="KEPT_ORIGINAL">🛡️ محتفظ بالشقة</option>
+              <option value="UNREGISTERED">⚪ غير مسجلة بعد</option>
+            </select>
+          </div>
+
+          <!-- Pagination -->
+          <div id="catalog-pagination" style="display: flex; align-items: center; gap: 0.5rem;">
+            <button class="btn btn-outline btn-sm" id="btn-prev-page" onclick="changeCatalogPage(-1)">السابق ⬅️</button>
+            <span id="catalog-page-info" style="font-size: 0.85rem; font-weight: 700;">صفحة 1 من 46</span>
+            <button class="btn btn-outline btn-sm" id="btn-next-page" onclick="changeCatalogPage(1)">التالي ➡️</button>
+          </div>
+        </div>
+
+        <div id="catalog-grid" class="catalog-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: RESULTS LOOKUP -->
+    <!-- ======================================================== -->
+    <section id="tab-results" class="tab-pane">
+      <div class="card" style="max-width: 850px; margin: 0 auto;">
+        <div class="card-header" style="text-align: center; display: block;">
+          <h2 class="card-title" style="justify-content: center;">🔍 استعلام الموظف عن نتيجة التبادل الرسمية</h2>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.4rem;">
+            أدخل رقمك القومي (14 رقم) للاطلاع على الشقة المخصصة لك بعد التوفيق الآلي بالقرعة العشوائية
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin: 1.5rem 0;">
+          <input type="text" id="query-nid" class="form-control" maxlength="14" placeholder="أدخل الرقم القومي الخاص بك (14 رقم)" style="font-size: 1.1rem;">
+          <button type="button" class="btn btn-accent" style="white-space: nowrap; padding: 0.75rem 2rem;" onclick="queryResult()">
+            عرض النتيجة 🔍
+          </button>
+        </div>
+
+        <div id="result-display-area" style="display: none;"></div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- TAB 4: ADMIN DASHBOARD -->
+    <!-- ======================================================== -->
+    <section id="tab-admin" class="tab-pane">
+      <div id="admin-login-box" class="card" style="max-width: 480px; margin: 3rem auto; text-align: center;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔐</div>
+        <h3 style="font-weight: 800; color: var(--primary);">دخول لجنة الإسكان والإدارة</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">أدخل رمز المرور السري للتحكم في المنظومة وإجراء المطابقة الآلية</p>
+        
+        <input type="password" id="admin-pin-input" class="form-control" placeholder="رمز المرور (الافتراضي: 2026)" style="text-align: center; font-size: 1.25rem; letter-spacing: 4px; margin-bottom: 1rem;">
+        <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">دخول لوحة التحكم 🚀</button>
+      </div>
+
+      <div id="admin-dashboard-view" style="display: none;">
+        
+        <!-- Security & Admin Settings Bar -->
+        <div style="background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>🛡️</span>
+            <span style="font-weight: 800; color: var(--primary);">لوحة تحكم لجنة الإسكان المركزية</span>
+            <span style="background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">جلسة مؤمنة بنجاح</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="showChangePasswordModal()">🔑 تغيير كلمة مرور الإدارة</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="adminLogout()">🚪 خروج</button>
+          </div>
+        </div>
+
+        <!-- System Operating Phase Switcher -->
+        <div class="phase-switcher" id="admin-phase-switcher">
+          <div class="phase-btn active-phase" id="phase-btn-1" onclick="switchSystemPhase('PHASE_1_DIRECT')">
+            <span class="phase-btn-badge badge-phase-active" id="phase-badge-1">المرحلة الحالية النشطة ✔️</span>
+            <div class="phase-btn-title"><span>1️⃣</span> المرحلة 1: الحصر والتواصل المباشر</div>
+            <div class="phase-btn-desc">حصر الوحدات الفائزة للموظفين وإتاحة أرقام التواصل والواتساب للتبادل الودي المباشر (One-to-One) مع إغلاق ترتيب الرغبات.</div>
+          </div>
+
+          <div class="phase-btn" id="phase-btn-2" onclick="switchSystemPhase('PHASE_2_PREFERENCES')">
+            <span class="phase-btn-badge badge-phase-inactive" id="phase-badge-2">غير نشط</span>
+            <div class="phase-btn-title"><span>2️⃣</span> المرحلة 2: فتح الرغبات والقرعة الآلية</div>
+            <div class="phase-btn-desc">فتح شاشة تسجيل الرغبات (10 إلى 20 رغبة) للموظفين، وتشغيل خوارزمية التوفيق الآلي بحل التزاحم بالرقم العشوائي المعتمد.</div>
+          </div>
+
+          <div class="phase-btn" id="phase-btn-3" onclick="switchSystemPhase('PHASE_3_RESULTS')">
+            <span class="phase-btn-badge badge-phase-inactive" id="phase-badge-3">غير نشط</span>
+            <div class="phase-btn-title"><span>3️⃣</span> المرحلة 3: إعلان النتائج الرسمية</div>
+            <div class="phase-btn-desc">إتاحة الاستعلام النهائي بالرقم القومي لجميع الموظفين وطباعة إخطارات التخصيص الرسمية وتصدير كشوف الإكسيل.</div>
+          </div>
+        </div>
+
+        <!-- KPIs (5 Columns) -->
+        <div class="grid-5" style="margin-bottom: 1.5rem;">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #eff6ff; color: #2563eb;">🏢</div>
+            <div>
+              <div class="stat-val" id="kpi-total-apts">1,100</div>
+              <div class="stat-label">شقق كراسة الشروط (R3 & R5)</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">👥</div>
+            <div>
+              <div class="stat-val" id="kpi-total-users">0</div>
+              <div class="stat-label">الموظفون المسجلون (الهدف: 900)</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">🔄</div>
+            <div>
+              <div class="stat-val" id="kpi-wants-swap">0</div>
+              <div class="stat-label">راغبون في التبديل</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #fffbeb; color: #b45309;">🤝</div>
+            <div>
+              <div class="stat-val" id="kpi-agreed-direct">0</div>
+              <div class="stat-label">تم التوافق الودي (1-to-1)</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #f1f5f9; color: #475569;">🛡️</div>
+            <div>
+              <div class="stat-val" id="kpi-keeping-apt">0</div>
+              <div class="stat-label">محتفظون بشققهم الأصلية</div>
+            </div>
+          </div>
+        </div>
+
+                <!-- Direct Swap Manager Card -->
+        <div class="card" style="border: 2px solid #d97706; background: #fffdfa; margin-bottom: 1.5rem;">
+          <div class="card-header" style="border-bottom: 1px solid #fde68a;">
+            <div>
+              <h3 class="card-title" style="color: #b45309;">
+                🤝 وحدة اعتماد التوافق الودي الثنائي المباشر (One-to-One Direct Swap Manager)
+              </h3>
+              <p style="font-size: 0.85rem; color: #92400e;">
+                خاص بلجنة التبديل والإدارة: لتسجيل وتأكيد التبادل الودي المباشر بين موظفين واستبعاد شققهم نهائياً من أي قرعة أو تبادل متعدد لاحقاً (One-to-Many).
+              </p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="loadDirectSwapsTable()">🔄 تحديث السجل</button>
+          </div>
+
+          <!-- Dual Party Search & Verification Box -->
+          <div style="background: white; border: 1.5px solid #fef3c7; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;">
+            <div class="grid-2" style="gap: 1.25rem;">
+              
+              <!-- Party 1 -->
+              <div style="border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 1rem; background: #fafcff;">
+                <div style="font-weight: 800; color: #1e3a8a; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                  <span>👤</span>
+                  <span>الطرف الأول (الموظف / الشقة الأولى):</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+                  <input type="text" id="admin-swap-q1" class="form-control" placeholder="الرقم القومي للموظف أو الرقم العقاري للشقة...">
+                  <button type="button" class="btn btn-primary btn-sm" style="white-space: nowrap;" onclick="lookupDirectSwapParty(1)">🔍 استعلام</button>
+                </div>
+                <div id="admin-swap-preview-1" style="display: none; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; font-size: 0.85rem;"></div>
+              </div>
+
+              <!-- Party 2 -->
+              <div style="border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 1rem; background: #fafcff;">
+                <div style="font-weight: 800; color: #1e3a8a; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                  <span>👤</span>
+                  <span>الطرف الثاني (الموظف / الشقة المقابلة):</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+                  <input type="text" id="admin-swap-q2" class="form-control" placeholder="الرقم القومي للموظف أو الرقم العقاري للشقة...">
+                  <button type="button" class="btn btn-primary btn-sm" style="white-space: nowrap;" onclick="lookupDirectSwapParty(2)">🔍 استعلام</button>
+                </div>
+                <div id="admin-swap-preview-2" style="display: none; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; font-size: 0.85rem;"></div>
+              </div>
+
+            </div>
+
+            <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+              <input type="text" id="admin-swap-notes" class="form-control" placeholder="ملاحظات الاعتماد (اختياري: تم التوافق بحضور الطرفين بمقر اللجنة)" style="flex: 1; min-width: 250px;">
+              <button type="button" class="btn btn-gold" style="padding: 0.8rem 1.5rem; font-weight: 800;" onclick="submitDirectSwapPair()">
+                🔒 اعتماد التوافق الودي المباشر وإغلاق الشقتين من المنظومة
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Single User Status Updater -->
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.25rem;">
+            <div style="font-weight: 800; color: #475569; margin-bottom: 0.5rem;">
+              ⚡ تعديل حالة موظف فردي يدوياً (إذا لم يقم باختيار تم التوافق الودي بنفسه):
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+              <input type="text" id="admin-single-user-q" class="form-control" placeholder="الرقم القومي للموظف أو الرقم العقاري للشقة..." style="width: 280px;">
+              <select id="admin-single-user-status" class="form-select" style="width: auto;">
+                <option value="AGREED_DIRECT">🤝 تم التوافق الودي ولا أرغب في التبديل</option>
+                <option value="WANTS_SWAP">🔄 أرغب في التبديل وإتاحة شقتي للتواصل المباشر</option>
+                <option value="KEPT_ORIGINAL">🛡️ محتفظ بالشقة الأصلية (لا أرغب في التبديل)</option>
+              </select>
+              <button type="button" class="btn btn-outline btn-sm" onclick="submitSingleUserStatusUpdate()">💾 حفظ الحالة وتحديث الشقة</button>
+            </div>
+          </div>
+
+          <!-- Approved Direct Swaps Table -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h4 style="font-weight: 800; font-size: 0.95rem; color: #92400e;">
+                📋 سجل التوافقات الودية الثنائية المعتمدة (المستبعدة من أي قرعة أو تبادل متعدد):
+              </h4>
+              <span id="direct-swaps-count-badge" style="font-size: 0.8rem; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 12px; font-weight: 700;">0 توافق معتمد</span>
+            </div>
+            <div style="overflow-x: auto; max-height: 350px; border: 1px solid var(--border); border-radius: 8px;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: right;">
+                <thead>
+                  <tr style="background: #fefce8; border-bottom: 2px solid #fef08a;">
+                    <th style="padding: 0.5rem;">م</th>
+                    <th style="padding: 0.5rem;">الطرف الأول</th>
+                    <th style="padding: 0.5rem;">شقة الطرف الأول</th>
+                    <th style="padding: 0.5rem; text-align: center;">↔️</th>
+                    <th style="padding: 0.5rem;">الطرف الثاني</th>
+                    <th style="padding: 0.5rem;">شقة الطرف الثاني</th>
+                    <th style="padding: 0.5rem;">تاريخ الاعتماد</th>
+                    <th style="padding: 0.5rem;">ملاحظات</th>
+                    <th style="padding: 0.5rem;">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="direct-swaps-tbody">
+                  <tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">لا توجد توافقات ودية مسجلة بعد</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Matching Control -->
+        <div class="card" style="border: 2px solid var(--accent); background: #fcfdfc;">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title" style="color: var(--accent);">⚙️ مركز التحكم في خوارزمية التوفيق الآلي وحل التزاحم بالرقم العشوائي</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">
+                تطبيق نظرية Gale's TTC لحل تزاحم رغبات الـ 900 موظف عبر رقم القرعة العشوائي المعتمد
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-outline btn-sm" onclick="seedTestData(100)">🎲 تجربة سريعة (100 موظف)</button>
+              <button class="btn btn-outline btn-sm" onclick="seedTestData(900)">🚀 محاكاة كاملة (900 موظف)</button>
+              <button class="btn btn-danger btn-sm" onclick="resetSystemData()">⚠️ إعادة ضبط البيانات</button>
+            </div>
+          </div>
+
+          <div class="grid-3" style="background: white; border: 1px solid var(--border); padding: 1.25rem; border-radius: 10px; margin-bottom: 1.25rem;">
+            <div>
+              <label class="form-label">معيار حل التزاحم والمفاضلة العادلة *</label>
+              <select id="admin-priority-rule" class="form-select">
+                <option value="random_draw" selected>🎲 قرعة إلكترونية عشوائية شفافة (المعيار المعتمد رسمياً)</option>
+                <option value="lottery_rank">أسبقية القرعة الأصلية (الرقم الأصغر أولاً)</option>
+                <option value="seniority_age">السن والأقدمية (من الرقم القومي)</option>
+                <option value="submission_time">أسبقية تسجيل الرغبات</option>
+              </select>
+              <div class="form-help">يحل معضلة: إذا اختار أكثر من موظف نفس الشقة كرغبة أولى</div>
+            </div>
+
+            <div>
+              <label class="form-label">نطاق دوائر التبادل المسموح بها</label>
+              <select id="admin-allow-cycles" class="form-select">
+                <option value="true">تبادل ثنائي ومتعدد الأطراف (أ ↔ ب) و (أ ← ب ← ج ← أ) [أعلى نسبة توفيق]</option>
+                <option value="false">تبادل ثنائي مباشر فقط (أ ↔ ب)</option>
+              </select>
+              <div class="form-help">التبادل متعدد الأطراف يرفع فرص التوفيق بنسبة 40%</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+              <button type="button" class="btn btn-accent" style="padding: 0.85rem;" onclick="runMatchingSimulation()">
+                ⚡ تشغيل التوفيق الآلي بالقرعة العشوائية
+              </button>
+            </div>
+          </div>
+
+          <!-- Matching Results Area -->
+          <div id="matching-results-area" style="display: none;">
+            <div style="background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem;">
+                <div>
+                  <h4 style="font-size: 1.2rem; font-weight: 800; color: var(--primary);">📊 إحصائيات نتيجة المطابقة:</h4>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">فض التزاحم بالرقم العشوائي المعتمد مع ضمان عقلانية الاختيار</div>
+                </div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                  <button class="btn btn-primary btn-sm" onclick="saveMatchingResults()">💾 اعتماد وحفظ النتيجة</button>
+                  <button id="btn-toggle-publish" class="btn btn-gold btn-sm" onclick="togglePublishResults(true)">📢 نشر النتيجة للموظفين</button>
+                  <a href="/api/admin/export-csv" class="btn btn-outline btn-sm">📥 تصدير كشف إكسيل رسمي (Excel CSV)</a>
+                </div>
+              </div>
+
+              <!-- Satisfaction Grid -->
+              <div class="grid-4" style="margin-bottom: 1.5rem;">
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1rem; border-radius: 10px; text-align: center;">
+                  <div style="font-size: 1.5rem; font-weight: 800; color: #166534;" id="stat-swapped-count">0</div>
+                  <div style="font-size: 0.8rem; color: #15803d;">إجمالي الموفقين للتبادل</div>
+                </div>
+
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 1rem; border-radius: 10px; text-align: center;">
+                  <div style="font-size: 1.5rem; font-weight: 800; color: #1e40af;" id="stat-rank1-pct">0%</div>
+                  <div style="font-size: 0.8rem; color: #1d4ed8;">حصلوا على الرغبة الأولى</div>
+                </div>
+
+                <div style="background: #fefce8; border: 1px solid #fef08a; padding: 1rem; border-radius: 10px; text-align: center;">
+                  <div style="font-size: 1.5rem; font-weight: 800; color: #854d0e;" id="stat-rank2-pct">0%</div>
+                  <div style="font-size: 0.8rem; color: #a16207;">حصلوا على الرغبة الثانية</div>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 1rem; border-radius: 10px; text-align: center;">
+                  <div style="font-size: 1.5rem; font-weight: 800; color: #475569;" id="stat-kept-count">0</div>
+                  <div style="font-size: 0.8rem; color: #64748b;">محتفظون بشققهم الأصلية</div>
+                </div>
+              </div>
+
+              <!-- Cycles Visualization -->
+              <h5 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--primary);">
+                🔄 شبكة وسلاسل التبادل الناتجة (Exchange Chains & Cycles):
+              </h5>
+              <div id="cycles-list-container"></div>
+
+              <!-- Results Table with Search & Full 900 Rows View -->
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin: 1.5rem 0 0.75rem;">
+                <h5 style="font-size: 1.1rem; font-weight: 800; color: var(--primary); margin: 0;">
+                  📋 الكشف الشامل للتبادلات (1,100 وحدة | 900 موظف بالكامل):
+                </h5>
+                <span id="results-count-badge" style="background: #e0f2fe; color: #0284c7; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 800; font-size: 0.85rem;">
+                  عرض 900 موظف بالكامل
+                </span>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-outline btn-sm active-filter" onclick="filterCandidatesTable('all', this)">عرض الكل (900 موظف)</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="filterCandidatesTable('swapped', this)">الموفقون للتبادل فقط 🔄</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="filterCandidatesTable('kept', this)">المحتفظون بشققهم فقط 🛡️</button>
+                </div>
+                <input type="text" id="candidates-search-input" class="form-control" placeholder="بحث بالاسم، الرقم القومي، الوزارة، الشقة..." style="width: 300px; font-size: 0.85rem;" oninput="onCandidatesSearch()">
+              </div>
+
+              <div style="overflow-x: auto; max-height: 550px; border: 1px solid var(--border); border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: right;">
+                  <thead>
+                    <tr style="background: #f1f5f9; border-bottom: 2px solid var(--border);">
+                      <th style="padding: 0.6rem;">م</th>
+                      <th style="padding: 0.6rem;">اسم الموظف</th>
+                      <th style="padding: 0.6rem;">الرقم القومي</th>
+                      <th style="padding: 0.6rem;">الوزارة / جهة العمل</th>
+                      <th style="padding: 0.6rem;">الشقة الأصلية</th>
+                      <th style="padding: 0.6rem;">الشقة الجديدة</th>
+                      <th style="padding: 0.6rem;">الرغبة المحققة</th>
+                      <th style="padding: 0.6rem;">نوع التبادل</th>
+                      <th style="padding: 0.6rem;">الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="candidates-results-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div style="max-width: 1280px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>منظومة تبادل وحدات الإسكان للعاملين © 2026 - كراسة الشروط الرسمية (1,100 وحدة: R3 & R5 | 900 متقدم)</div>
+      <div style="font-size: 0.8rem; opacity: 0.75;">خوارزمية Gale's Top Trading Cycles مع المفاضلة بالقرعة العشوائية</div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+
+  <!-- Employee Desires Modal -->
+  <div id="desires-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: white; border-radius: 12px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 1.5rem; box-shadow: var(--shadow-lg); position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+        <div>
+          <h3 id="modal-employee-name" style="font-weight: 800; color: var(--primary); margin: 0;">تفاصيل رغبات الموظف</h3>
+          <div id="modal-employee-sub" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;"></div>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeDesiresModal()">✕ إغلاق</button>
+      </div>
+
+      <div id="modal-employee-owned" style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.88rem;"></div>
+
+      <h5 style="font-weight: 700; color: var(--primary); margin-bottom: 0.5rem;">قائمة الرغبات المسجلة من كراسة الشروط:</h5>
+      <div id="modal-preferences-table-container"></div>
+    </div>
+  </div>
+
+  <!-- Change Admin Password Modal -->
+  <div id="password-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: white; border-radius: 12px; width: 100%; max-width: 440px; padding: 1.5rem; box-shadow: var(--shadow-lg);">
+      <h3 style="font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">🔑 تغيير كلمة مرور لوحة الإدارة</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">يمكنك تعيين كلمة مرور جديدة لحماية لوحة الإدارة ولجنة التبديل</p>
+
+      <form id="change-password-form" onsubmit="handleChangePassword(event)">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">كلمة المرور الحالية *</label>
+          <input type="password" id="pwd-old" class="form-control" placeholder="أدخل كلمة المرور الحالية" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">كلمة المرور الجديدة *</label>
+          <input type="password" id="pwd-new" class="form-control" placeholder="4 خانات أو أكثر" minlength="4" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label">تأكيد كلمة المرور الجديدة *</label>
+          <input type="password" id="pwd-confirm" class="form-control" placeholder="أعد كتابة كلمة المرور الجديدة" minlength="4" required>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+          <button type="button" class="btn btn-outline" onclick="closePasswordModal()">إلغاء</button>
+          <button type="submit" class="btn btn-primary">حفظ كلمة المرور الجديدة 💾</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Cycle Members Modal (Admin & Public) -->
+  <div id="cycle-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: white; border-radius: 12px; width: 100%; max-width: 880px; max-height: 90vh; overflow-y: auto; padding: 1.5rem; box-shadow: var(--shadow-lg); position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+        <div>
+          <h3 id="cycle-modal-title" style="font-weight: 800; color: var(--primary); margin: 0;">أطراف دورة التبادل</h3>
+          <div id="cycle-modal-sub" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+            مطلوب حضور جميع الأطراف معاً لوزارة الإسكان لإتمام إجراءات التنازل المتبادل
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeCycleModal()">✕ إغلاق</button>
+      </div>
+
+      <div id="cycle-modal-content"></div>
+
+      <div style="margin-top: 1.25rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
+        <div style="font-size: 0.8rem; color: #64748b;">
+          * يرجى التنسيق بين جميع أطراف السلسلة لضمان حضور الجميع في نفس الموعد.
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">🖨️ طباعة كشف أطراف الدورة</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

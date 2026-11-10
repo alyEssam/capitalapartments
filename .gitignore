@@ -1,0 +1,6 @@
+node_modules
+*.log
+data/housing.db-wal
+data/housing.db-shm
+.DS_Store
+Thumbs.db
