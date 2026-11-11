@@ -1199,7 +1199,7 @@ async function queryResult() {
       `;
       return;
     }
-    const isSwapped = r.swap_type !== 'KEPT_ORIGINAL';
+    const isSwapped = r.swap_type !== 'KEPT_ORIGINAL' && Number(r.assigned_apartment_id) !== Number(r.original_apartment_id);
 
     display.innerHTML = `
       <div style="background: white; border: 2px solid ${isSwapped ? '#16a34a' : '#d97706'}; border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow-lg);">
@@ -1747,7 +1747,7 @@ function renderCandidatesTableRows() {
   state.apartments.forEach(a => aptMap.set(a.id, a));
 
   const filtered = results.filter(r => {
-    const isSwapped = r.swapType !== "KEPT_ORIGINAL";
+    const isSwapped = r.swapType !== "KEPT_ORIGINAL" && r.swap_type !== "KEPT_ORIGINAL" && Number(r.assignedAptId || r.assigned_apartment_id) !== Number(r.originalAptId || r.original_apartment_id);
     if (filter === 'swapped' && !isSwapped) return false;
     if (filter === 'kept' && isSwapped) return false;
 
@@ -1782,7 +1782,7 @@ function renderCandidatesTableRows() {
 
   // Render all candidates
   tbody.innerHTML = filtered.map((r, i) => {
-    const isSwapped = r.swapType !== "KEPT_ORIGINAL";
+    const isSwapped = r.swapType !== "KEPT_ORIGINAL" && r.swap_type !== "KEPT_ORIGINAL" && Number(r.assignedAptId || r.assigned_apartment_id) !== Number(r.originalAptId || r.original_apartment_id);
     const origApt = aptMap.get(r.originalAptId);
     const assignApt = aptMap.get(r.assignedAptId);
 
@@ -1808,9 +1808,9 @@ function renderCandidatesTableRows() {
             </div>
           ` : ''}
         </td>
-        <td style="padding: 0.6rem; text-align: center; font-weight: 700;">${r.rankAchieved ? `الرغبة ${r.rankAchieved}` : 'الأصلية'}</td>
+        <td style="padding: 0.6rem; text-align: center; font-weight: 700;">${isSwapped && r.rankAchieved ? `الرغبة ${r.rankAchieved}` : 'الأصلية'}</td>
         <td style="padding: 0.6rem; font-size: 0.8rem;">
-          ${r.swapType === 'KEPT_ORIGINAL' ? 'احتفاظ' : `
+          ${!isSwapped || r.swapType === 'KEPT_ORIGINAL' ? 'احتفاظ' : `
             <div>
               <div style="font-weight: 700; color: #166534;">${r.swapType === 'DIRECT_PAIR' ? 'ثنائي مباشر (طرفان)' : `دورة تبادل (${(r.allCycleMembers || []).length || (r.cyclePartners || []).length + 1 || ''} أطراف)`}</div>
               ${r.cycleId ? `
