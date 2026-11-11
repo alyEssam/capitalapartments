@@ -280,6 +280,10 @@ function initFormListeners() {
         const age = new Date().getFullYear() - parseInt(year);
         feedback.innerHTML = `<span style="color: #16a34a; font-weight: bold;">تاريخ الميلاد: ${day}/${month}/${year} (السن التقديري: ${age} سنة)</span>`;
       }
+      const bldgSelect = document.getElementById("reg-bldg-select");
+      if (bldgSelect && bldgSelect.value) {
+        onBuildingSelected();
+      }
     } else {
       feedback.textContent = "يتم استخراج تاريخ الميلاد والسن تلقائياً";
     }
@@ -405,17 +409,44 @@ function onBuildingSelected() {
   const units = state.apartments.filter(a => a.district === district && a.neighborhood === nh && a.building === bldg);
   units.sort((a, b) => a.id - b.id);
 
+  const currentNid = (document.getElementById("reg-nid") ? document.getElementById("reg-nid").value.trim() : "") || (state.currentUser ? state.currentUser.national_id : "");
+
   units.forEach(u => {
     const opt = document.createElement("option");
     opt.value = u.id;
-    opt.textContent = `وحدة ${u.unit_number} - ${u.floor_label} (نموذج ${u.model} - ${u.area}م²)`;
+    const isOwnedByOther = u.owner_name && u.owner_nid !== currentNid;
+    if (isOwnedByOther) {
+      opt.textContent = `⛔ وحدة ${u.unit_number} - مسجلة باسم: ${u.owner_name} (${u.owner_workplace || 'جهة العمل غير محددة'})`;
+      opt.disabled = true;
+      opt.style.color = "#dc2626";
+      opt.style.backgroundColor = "#fee2e2";
+    } else {
+      opt.textContent = `وحدة ${u.unit_number} - ${u.floor_label} (نموذج ${u.model} - ${u.area}م²)`;
+    }
     unitSelect.appendChild(opt);
   });
 }
 
 function onUnitSelected() {
   const unitId = document.getElementById("reg-unit-select").value;
-  state.selectedAptId = unitId ? Number(unitId) : null;
+  if (!unitId) {
+    state.selectedAptId = null;
+    showOwnedApartmentPreview();
+    return;
+  }
+
+  const apt = state.apartments.find(a => a.id === Number(unitId));
+  const currentNid = (document.getElementById("reg-nid") ? document.getElementById("reg-nid").value.trim() : "") || (state.currentUser ? state.currentUser.national_id : "");
+
+  if (apt && apt.owner_name && apt.owner_nid !== currentNid) {
+    showToast(`⛔ عذراً، هذه الشقة مسجلة بالفعل بالمنصة باسم الزميل: ${apt.owner_name} (${apt.owner_workplace || ''}). لا يمكن تسجيل نفس الشقة لأكثر من موظف.`, "error");
+    document.getElementById("reg-unit-select").value = "";
+    state.selectedAptId = null;
+    showOwnedApartmentPreview();
+    return;
+  }
+
+  state.selectedAptId = Number(unitId);
   showOwnedApartmentPreview();
 
   if (state.selectedAptId) {
@@ -436,6 +467,12 @@ function onQuickPropertyIdInput() {
   );
 
   if (apt) {
+    const currentNid = (document.getElementById("reg-nid") ? document.getElementById("reg-nid").value.trim() : "") || (state.currentUser ? state.currentUser.national_id : "");
+    if (apt.owner_name && apt.owner_nid !== currentNid) {
+      showToast(`⛔ هذه الشقة مسجلة بالفعل بالمنصة باسم الزميل: ${apt.owner_name} (${apt.owner_workplace || ''})`, "error");
+      return;
+    }
+
     document.getElementById("reg-district-select").value = apt.district;
     onDistrictSelected();
     document.getElementById("reg-nh-select").value = apt.neighborhood;
@@ -693,6 +730,12 @@ async function handleRegistrationSubmit(e) {
 
   if (!workplace) {
     showToast("يرجى كتابة اسم الوزارة أو جهة العمل", "error");
+    return;
+  }
+
+  const selectedAptObj = state.apartments.find(a => a.id === state.selectedAptId);
+  if (selectedAptObj && selectedAptObj.owner_name && selectedAptObj.owner_nid !== nid) {
+    showToast(`⛔ لا يمكن حفظ البيانات: هذه الشقة مسجلة بالفعل باسم الزميل: ${selectedAptObj.owner_name} (${selectedAptObj.owner_workplace || ''})`, "error");
     return;
   }
 

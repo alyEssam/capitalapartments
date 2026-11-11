@@ -103,12 +103,19 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 400, { success: false, message: "طالما اخترت الرغبة في التبديل في المرحلة الثانية، يجب اختيار رغبة واحدة على الأقل من قائمة الشقق" });
       }
 
-      const updatedUser = db.saveUserRegistration(body);
-      return sendJson(res, 200, {
-        success: true,
-        message: "تم حفظ بياناتك ورغباتك بنجاح في المنصة بالرقم العشوائي المعتمد",
-        user: updatedUser
-      });
+      try {
+        const updatedUser = db.saveUserRegistration(body);
+        return sendJson(res, 200, {
+          success: true,
+          message: "تم حفظ بياناتك ورغباتك بنجاح في المنصة بالرقم العشوائي المعتمد",
+          user: updatedUser
+        });
+      } catch (err) {
+        return sendJson(res, 400, {
+          success: false,
+          message: err.message || "فشل تسجيل البيانات"
+        });
+      }
     }
 
     // 4. Lookup user by National ID
