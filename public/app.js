@@ -1955,6 +1955,7 @@ function renderMatchingResults(data) {
                   <th style="padding: 4px 8px;">رقم المحمول للتنسيق</th>
                   <th style="padding: 4px 8px;">الشقة الأصلية</th>
                   <th style="padding: 4px 8px;">الشقة الجديدة المحققة</th>
+                  <th style="padding: 4px 8px; text-align: center;">الرغبة</th>
                 </tr>
               </thead>
               <tbody>
@@ -1982,6 +1983,9 @@ function renderMatchingResults(data) {
                           ${(m.assignDistrict && m.assignBuilding) ? `${m.assignDistrict}-${m.assignNeighborhood}-ع ${m.assignBuilding}-و ${m.assignUnit}` : (m.assignedAptCode || '-')}
                         </div>
                         ${(m.assignNatId || m.assign_nat_id) ? `<div style="font-size: 0.72rem; color: #15803d; font-family: monospace;">عقاري: ${m.assignNatId || m.assign_nat_id}</div>` : ''}
+                      </td>
+                      <td style="padding: 6px 8px; text-align: center;">
+                        <span style="background: #e0f2fe; color: #0284c7; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.75rem;">الرغبة #${m.rankAchieved || m.rank_achieved || 1}</span>
                       </td>
                     </tr>
                   `;
@@ -2394,6 +2398,7 @@ async function showCycleModal(cycleId) {
               <th style="padding: 6px 8px;">رقم المحمول والتواصل</th>
               <th style="padding: 6px 8px;">الشقة الأصلية المتنازل عنها</th>
               <th style="padding: 6px 8px;">الشقة الجديدة المخصصة</th>
+              <th style="padding: 6px 8px; text-align: center;">الرغبة</th>
             </tr>
           </thead>
           <tbody>
@@ -2434,6 +2439,9 @@ async function showCycleModal(cycleId) {
                     <div style="font-weight: 800;">${assignDist}-${assignNh}-ع${assignBld}-و${assignUnit} ${assignFl ? '(' + assignFl + ')' : ''}</div>
                     ${assignNat ? `<div style="font-size: 0.72rem; color: #15803d; font-family: monospace;">عقاري: ${assignNat}</div>` : ''}
                     ${recvFrom ? `<div style="font-size: 0.74rem; color: #1e40af; font-weight: 700; margin-top: 2px;">🔑 يتسلمها من: ${recvFrom}</div>` : ''}
+                  </td>
+                  <td style="padding: 8px; text-align: center;">
+                    <span style="background: #e0f2fe; color: #0284c7; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.75rem;">الرغبة #${m.rankAchieved || m.rank_achieved || 1}</span>
                   </td>
                 </tr>
               `;
