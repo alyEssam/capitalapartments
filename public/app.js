@@ -692,6 +692,7 @@ async function handleRegistrationSubmit(e) {
     });
     const data = await res.json();
     if (data.success) {
+      setCurrentUser(data.user);
       showToast("تم حفظ بياناتك بنجاح وحساب رقمك العشوائي المعتمد للمفاضلة!", "success");
       renderReceipt(data.user);
       loadStats();
@@ -956,12 +957,12 @@ function renderCatalog() {
               🏛️ <strong>الوزارة:</strong> ${apt.owner_workplace || 'غير محددة'}
             </div>
             <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-              <a href="https://wa.me/20${cleanPhone}?text=${waMsg}" target="_blank" class="btn-whatsapp">
+              <button type="button" class="btn-whatsapp" onclick="handleDirectWhatsApp(${apt.id})">
                 💬 واتساب مباشر
-              </a>
-              <a href="tel:${apt.owner_phone}" class="btn-call">
+              </button>
+              <button type="button" class="btn-call" onclick="handleDirectCall(${apt.id})">
                 📞 ${apt.owner_phone}
-              </a>
+              </button>
             </div>
           </div>
         `;
@@ -2103,4 +2104,147 @@ function togglePinVisibility() {
   const pinInput = document.getElementById("admin-pin-input");
   if (!pinInput) return;
   pinInput.type = pinInput.type === "password" ? "text" : "password";
+}
+
+
+// Current User State & Identity Management
+function setCurrentUser(user) {
+  state.currentUser = user;
+  try {
+    localStorage.setItem("capital_housing_current_user", JSON.stringify(user));
+  } catch(e) {}
+  updateCatalogUserBanner();
+}
+
+function getCurrentUser() {
+  if (state.currentUser && state.currentUser.full_name) return state.currentUser;
+  try {
+    const saved = localStorage.getItem("capital_housing_current_user");
+    if (saved) {
+      state.currentUser = JSON.parse(saved);
+      return state.currentUser;
+    }
+  } catch(e) {}
+
+  // Check form values as fallback
+  const nameInput = document.getElementById("reg-name");
+  const phoneInput = document.getElementById("reg-phone");
+  const workplaceInput = document.getElementById("reg-workplace");
+  if (nameInput && nameInput.value.trim()) {
+    const origApt = state.apartments.find(a => a.id === state.selectedAptId);
+    return {
+      full_name: nameInput.value.trim(),
+      phone: phoneInput ? phoneInput.value.trim() : "",
+      workplace: workplaceInput ? workplaceInput.value.trim() : "",
+      original_apartment_id: state.selectedAptId,
+      apt_district: origApt ? origApt.district : "",
+      apt_building: origApt ? origApt.building : "",
+      apt_unit: origApt ? origApt.unit_number : "",
+      apt_area: origApt ? origApt.area : ""
+    };
+  }
+  return null;
+}
+
+function switchTab(tabId) {
+  const btn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+  if (btn) {
+    btn.click();
+  } else {
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-pane").forEach(pane => pane.classList.remove("active"));
+    const targetPane = document.getElementById(tabId);
+    if (targetPane) targetPane.classList.add("active");
+  }
+}
+
+function updateCatalogUserBanner() {
+  const userBanner = document.getElementById("catalog-user-banner");
+  const guestBanner = document.getElementById("catalog-guest-banner");
+  const userNameEl = document.getElementById("catalog-user-name");
+  const userAptEl = document.getElementById("catalog-user-apt");
+
+  const me = getCurrentUser();
+  if (me && me.full_name) {
+    if (userBanner) userBanner.style.display = "flex";
+    if (guestBanner) guestBanner.style.display = "none";
+    if (userNameEl) userNameEl.textContent = me.full_name;
+    if (userAptEl) {
+      const myApt = state.apartments.find(a => a.id === me.original_apartment_id);
+      if (myApt) {
+        userAptEl.textContent = `${myApt.district} عمارة ${myApt.building} شقة ${myApt.unit_number} (مساحة ${myApt.area}م²)`;
+      } else {
+        userAptEl.textContent = "تم التسجيل";
+      }
+    }
+  } else {
+    if (userBanner) userBanner.style.display = "none";
+    if (guestBanner) guestBanner.style.display = "flex";
+  }
+}
+
+function handleDirectWhatsApp(aptId) {
+  const apt = state.apartments.find(a => a.id === aptId);
+  if (!apt || !apt.owner_phone) {
+    showToast("بيانات هاتف صاحب الوحدة غير متوفرة", "error");
+    return;
+  }
+
+  const me = getCurrentUser();
+  if (!me || !me.full_name) {
+    showToast("⚠️ يرجى تسجيل بياناتك وشقتك أولاً لكي يتعرف عليك الزميل ويتم التنسيق بينكما!", "warning");
+    switchTab("tab-register");
+    setTimeout(() => {
+      const regSection = document.getElementById("tab-register");
+      if (regSection) regSection.scrollIntoView({ behavior: "smooth" });
+      const nameInput = document.getElementById("reg-name");
+      if (nameInput) nameInput.focus();
+    }, 150);
+    return;
+  }
+
+  if (me.original_apartment_id && Number(me.original_apartment_id) === Number(apt.id)) {
+    showToast("هذه شقتك الأصلية المسجلة باسمك في المنظومة!", "info");
+    return;
+  }
+
+  let senderInfo = `أنا زميلكم ${me.full_name}`;
+  if (me.workplace) {
+    senderInfo += ` (${me.workplace})`;
+  }
+
+  const myApt = state.apartments.find(a => a.id === me.original_apartment_id);
+  let myAptInfo = "";
+  if (myApt) {
+    myAptInfo = `، وشقتي الحالية المعروضة للتبادل هي: (حي ${myApt.district}، عمارة ${myApt.building}، شقة ${myApt.unit_number}، الدور ${myApt.floor_label}، نموذج ${myApt.model}، مساحة ${myApt.area}م²)`;
+  }
+
+  const message = `السلام عليكم أستاذ ${apt.owner_name}، بخصوص شقتكم في كراسة الشروط الرسمية (حي ${apt.district}، عمارة ${apt.building}، شقة ${apt.unit_number})، ${senderInfo}${myAptInfo}، وأرغب في التنسيق معكم للتبادل الثنائي الودي.`;
+
+  const cleanPhone = (apt.owner_phone || '').replace(/\D/g, '').replace(/^0/, '');
+  const url = `https://wa.me/20${cleanPhone}?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+}
+
+function handleDirectCall(aptId) {
+  const apt = state.apartments.find(a => a.id === aptId);
+  if (!apt || !apt.owner_phone) return;
+
+  const me = getCurrentUser();
+  if (!me || !me.full_name) {
+    showToast("⚠️ يرجى تسجيل بياناتك وشقتك أولاً للتواصل المباشر مع الزملاء!", "warning");
+    switchTab("tab-register");
+    setTimeout(() => {
+      const regSection = document.getElementById("tab-register");
+      if (regSection) regSection.scrollIntoView({ behavior: "smooth" });
+    }, 150);
+    return;
+  }
+
+  if (me.original_apartment_id && Number(me.original_apartment_id) === Number(apt.id)) {
+    showToast("هذه شقتك الأصلية المسجلة باسمك في المنظومة!", "info");
+    return;
+  }
+
+  window.location.href = `tel:${apt.owner_phone}`;
 }

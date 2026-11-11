@@ -336,6 +336,27 @@
           </div>
         </div>
 
+        <!-- Active User Banner in Catalog -->
+        <div id="catalog-user-banner" style="display: none; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1rem; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
+            <span>👋</span>
+            <span>مرحباً بك يا أستاذ <strong id="catalog-user-name" style="color: #166534;"></strong> | شقتك المسجلة: <strong id="catalog-user-apt" style="color: #15803d;"></strong></span>
+          </div>
+          <div style="font-size: 0.8rem; color: #166534; font-weight: 600;">
+            ✨ سيتم إدراج اسمك وشقتك تلقائياً في رسائل الواتساب للتنسيق الودي المباشر.
+          </div>
+        </div>
+
+        <div id="catalog-guest-banner" style="background: #fffbeb; border: 1.5px dashed #fcd34d; border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <div style="font-size: 0.88rem; color: #92400e; display: flex; align-items: center; gap: 0.4rem;">
+            <span>⚠️</span>
+            <span>للتواصل المباشر مع الزملاء عبر واتساب باسمك وشقتك، يرجى تسجيل استمارتك أولاً.</span>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('tab-register')" style="font-size: 0.8rem; padding: 4px 12px; cursor: pointer;">
+            ✍️ تسجيل بياناتي وشقتي الآن
+          </button>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
             <button class="btn btn-outline btn-sm active-filter" onclick="filterCatalogByDistrict('all', this)">الكل (1,100)</button>
