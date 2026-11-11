@@ -1363,42 +1363,107 @@ async function lookupExistingUserPreferences() {
     }
 
     const u = data.user;
-    document.getElementById("reg-name").value = u.full_name || '';
-    document.getElementById("reg-phone").value = u.phone || '';
-    document.getElementById("reg-workplace").value = u.workplace || '';
+    setCurrentUser(u);
 
+    // 1. Fill personal details
+    const nameEl = document.getElementById("reg-name");
+    const phoneEl = document.getElementById("reg-phone");
+    const workplaceEl = document.getElementById("reg-workplace");
+    if (nameEl) nameEl.value = u.full_name || '';
+    if (phoneEl) phoneEl.value = u.phone || '';
+    if (workplaceEl) workplaceEl.value = u.workplace || '';
+
+    // 2. Select original apartment across cascading dropdowns
     if (u.original_apartment_id) {
-      state.selectedAptId = u.original_apartment_id;
-      const apt = state.apartments.find(a => a.id === u.original_apartment_id);
+      const apt = state.apartments.find(a => a.id === Number(u.original_apartment_id));
       if (apt) {
-        document.getElementById("reg-district-select").value = apt.district;
-        onDistrictSelected();
-        document.getElementById("reg-nh-select").value = apt.neighborhood;
-        onNeighborhoodSelected();
-        document.getElementById("reg-bldg-select").value = apt.building;
-        onBuildingSelected();
-        document.getElementById("reg-unit-select").value = apt.id;
+        const distSelect = document.getElementById("reg-district-select");
+        if (distSelect) {
+          distSelect.value = apt.district;
+          onDistrictSelected();
+        }
+
+        const nhSelect = document.getElementById("reg-nh-select");
+        if (nhSelect) {
+          nhSelect.value = apt.neighborhood;
+          onNeighborhoodSelected();
+        }
+
+        const bldgSelect = document.getElementById("reg-bldg-select");
+        if (bldgSelect) {
+          bldgSelect.value = apt.building;
+          onBuildingSelected();
+        }
+
+        const unitSelect = document.getElementById("reg-unit-select");
+        if (unitSelect) {
+          unitSelect.value = String(apt.id);
+        }
+
+        state.selectedAptId = apt.id;
+        showOwnedApartmentPreview();
       }
-      showOwnedApartmentPreview();
     }
 
+    // 3. Set swap status
     const st = u.swap_status || (u.wants_swap === 1 ? 'WANTS_SWAP' : 'KEPT_ORIGINAL');
     setSwapStatus(st);
 
+    // 4. Restore preferences (up to 20)
     if (u.preferences && u.preferences.length > 0) {
       state.preferences = u.preferences.map(p => {
         return state.apartments.find(a => a.id === p.id) || p;
       });
+
       renderPreferencesList();
       filterPickerApts();
-      showToast(`مرحباً ${u.full_name}! تم استرجاع بياناتك وشقتك و (${u.preferences.length}) رغبات سابقة بنجاح.`, "success");
+      renderPhase1SavedPreferences(state.preferences);
+      showToast(`مرحباً أستاذ ${u.full_name}! تم استرجاع بياناتك وشقتك و (${u.preferences.length}) رغبة مسجلة بنجاح.`, "success");
     } else {
-      showToast(`مرحباً ${u.full_name}! تم استرجاع بياناتك بنجاح.`, "success");
+      renderPhase1SavedPreferences([]);
+      showToast(`مرحباً أستاذ ${u.full_name}! تم استرجاع بياناتك وشقتك الأصلية بنجاح.`, "success");
     }
 
   } catch(e) {
+    console.error("Lookup error:", e);
     showToast("حدث خطأ أثناء استرجاع البيانات", "error");
   }
+}
+
+function renderPhase1SavedPreferences(preferences) {
+  const box = document.getElementById("phase1-saved-prefs-box");
+  const list = document.getElementById("phase1-saved-prefs-list");
+  const countEl = document.getElementById("phase1-saved-prefs-count");
+  if (!box || !list) return;
+
+  if (!preferences || preferences.length === 0) {
+    box.style.display = "none";
+    list.innerHTML = "";
+    return;
+  }
+
+  box.style.display = "block";
+  if (countEl) countEl.textContent = `${preferences.length} رغبة مسجلة`;
+
+  list.innerHTML = preferences.map((p, idx) => {
+    const distBadge = p.district === 'R3' 
+      ? '<span class="badge-r3" style="font-size: 0.72rem; padding: 2px 6px;">R3</span>' 
+      : '<span class="badge-r5" style="font-size: 0.72rem; padding: 2px 6px;">R5</span>';
+    
+    return `
+      <div style="background: white; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.6rem 0.85rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="background: #166534; color: white; min-width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 800;">#${idx + 1}</span>
+          ${distBadge}
+          <span style="font-weight: 700; color: #1e3a8a; font-size: 0.9rem;">مجاورة ${p.neighborhood} - عمارة ${p.building} - شقة ${p.unit_number}</span>
+          <span style="font-size: 0.8rem; color: #64748b;">(${p.floor_label} - نموذج ${p.model} - مساحة ${p.area}م²)</span>
+        </div>
+        <div style="font-size: 0.75rem; color: #166534; font-family: monospace; font-weight: 700; background: #dcfce7; padding: 2px 8px; border-radius: 4px;">
+          ${p.code}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 async function viewEmployeeDesires(nid) {
