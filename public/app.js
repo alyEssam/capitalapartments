@@ -1730,14 +1730,19 @@ function renderCandidatesTableRows() {
         <td style="padding: 0.6rem; font-size: 0.8rem; font-weight: 800; color: ${isSwapped ? '#166534' : 'inherit'};">
           <div style="font-weight: 800;">${assignTxt}</div>
           ${assignApt ? `<div style="font-size: 0.72rem; color: ${isSwapped ? '#15803d' : '#64748b'}; font-family: monospace;">عقاري: ${assignApt.national_property_id}</div>` : (r.assignNatId ? `<div style="font-size: 0.72rem; color: ${isSwapped ? '#15803d' : '#64748b'}; font-family: monospace;">عقاري: ${r.assignNatId}</div>` : '')}
+          ${isSwapped && (r.receivingFromName || (r.receivingFrom && r.receivingFrom.name)) ? `
+            <div style="font-size: 0.75rem; color: #1e40af; font-weight: 700; margin-top: 3px; background: #eff6ff; padding: 2px 6px; border-radius: 4px; display: inline-block;">
+              🔑 يتسلمها من: ${r.receivingFromName || r.receivingFrom.name}
+            </div>
+          ` : ''}
         </td>
         <td style="padding: 0.6rem; text-align: center; font-weight: 700;">${r.rankAchieved ? `الرغبة ${r.rankAchieved}` : 'الأصلية'}</td>
         <td style="padding: 0.6rem; font-size: 0.8rem;">
           ${r.swapType === 'KEPT_ORIGINAL' ? 'احتفاظ' : `
             <div>
-              <div style="font-weight: 700; color: #166534;">${r.swapType === 'DIRECT_PAIR' ? 'ثنائي مباشر' : 'دورة تبادل'}</div>
+              <div style="font-weight: 700; color: #166534;">${r.swapType === 'DIRECT_PAIR' ? 'ثنائي مباشر (طرفان)' : `دورة تبادل (${(r.allCycleMembers || []).length || (r.cyclePartners || []).length + 1 || ''} أطراف)`}</div>
               ${r.cycleId ? `
-                <button type="button" class="btn btn-outline btn-sm" style="padding: 1px 6px; font-size: 0.7rem; margin-top: 2px;" onclick="showCycleModal('${r.cycleId}')">
+                <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 0.72rem; margin-top: 3px; font-weight: 700;" onclick="showCycleModal('${r.cycleId}')">
                   👥 أطراف ${r.cycleId}
                 </button>
               ` : ''}
@@ -2120,18 +2125,34 @@ async function showCycleModal(cycleId) {
   modal.style.display = "flex";
 
   try {
-    const res = await fetch(`/api/cycle/${cycleId}`);
-    const data = await res.json();
-    if (!data.success || !data.members || data.members.length === 0) {
+    let members = null;
+    // 1. Look in active latestMatchData cycles first
+    if (state.latestMatchData && state.latestMatchData.cycles) {
+      const found = state.latestMatchData.cycles.find(c => c.cycleId === cycleId);
+      if (found && found.members && found.members.length > 0) {
+        members = found.members;
+      }
+    }
+
+    // 2. Fallback to API if not present in memory
+    if (!members) {
+      const res = await fetch(`/api/cycle/${cycleId}`);
+      const data = await res.json();
+      if (data.success && data.members) {
+        members = data.members;
+      }
+    }
+
+    if (!members || members.length === 0) {
       content.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">لم يتم العثور على أطراف هذه الدورة.</div>`;
       return;
     }
 
-    const isPair = data.members.length === 2;
+    const isPair = members.length === 2;
     content.innerHTML = `
       <div style="margin-bottom: 1rem; background: ${isPair ? '#f0fdf4' : '#eff6ff'}; border: 1px solid ${isPair ? '#bbf7d0' : '#bfdbfe'}; border-radius: 8px; padding: 0.75rem 1rem;">
         <div style="font-weight: 800; color: #1e3a8a;">
-          ${isPair ? '🤝 تبادل ثنائي مباشر بين زميلين' : `🔄 دورة تبادل متعددة (${data.members.length} أطراف)`}
+          ${isPair ? '🤝 تبادل ثنائي مباشر بين زميلين' : `🔄 دورة تبادل متعددة (${members.length} أطراف موفقة معاً)`}
         </div>
         <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">
           يجب حضور جميع الزملاء المذكورين أدناه معاً بمقر وزارة الإسكان لتوقيع التنازلات المتبادلة في نفس الجلسة.
@@ -2151,26 +2172,43 @@ async function showCycleModal(cycleId) {
             </tr>
           </thead>
           <tbody>
-            ${data.members.map((m, idx) => {
+            ${members.map((m, idx) => {
               const cleanPhone = (m.phone || '').replace(/\D/g, '').replace(/^0/, '');
+              const memberName = m.full_name || m.name || m.userName;
+              const origDist = m.orig_district || m.origDistrict || '';
+              const origNh = m.orig_neighborhood || m.origNeighborhood || '';
+              const origBld = m.orig_building || m.origBuilding || '';
+              const origUnit = m.orig_unit || m.origUnit || '';
+              const origFl = m.orig_floor_label || m.origFloorLabel || '';
+              const origNat = m.orig_nat_id || m.origNatId || '';
+              
+              const assignDist = m.assign_district || m.assignDistrict || '';
+              const assignNh = m.assign_neighborhood || m.assignNeighborhood || '';
+              const assignBld = m.assign_building || m.assignBuilding || '';
+              const assignUnit = m.assign_unit || m.assignUnit || '';
+              const assignFl = m.assign_floor_label || m.assignFloorLabel || '';
+              const assignNat = m.assign_nat_id || m.assignNatId || '';
+              const recvFrom = m.receivingFromName || (m.receivingFrom ? m.receivingFrom.name : '') || m.receiving_from_name || '';
+
               return `
                 <tr style="border-bottom: 1px solid #e2e8f0;">
                   <td style="padding: 8px; font-weight: 700;">${idx + 1}</td>
-                  <td style="padding: 8px; font-weight: 800; color: #1e3a8a;">${m.full_name}</td>
+                  <td style="padding: 8px; font-weight: 800; color: #1e3a8a;">${memberName}</td>
                   <td style="padding: 8px; color: #475569;">${m.workplace || '-'}</td>
                   <td style="padding: 8px;">
                     <div style="display: inline-flex; align-items: center; gap: 4px;">
                       <a href="tel:${m.phone}" class="btn-call" style="padding: 3px 8px;">📞 ${m.phone}</a>
-                      <a href="https://wa.me/20${cleanPhone}?text=${encodeURIComponent('السلام عليكم أ/ ' + m.full_name + '، بخصوص التنسيق للتنازل المتبادل بشقق العاصمة الإدارية في وزارة الإسكان لكود ' + cycleId)}" target="_blank" class="btn-whatsapp" style="padding: 3px 8px;">💬 واتساب</a>
+                      <a href="https://wa.me/20${cleanPhone}?text=${encodeURIComponent('السلام عليكم أ/ ' + memberName + '، بخصوص التنسيق للتنازل المتبادل بشقق العاصمة الإدارية في وزارة الإسكان لكود ' + cycleId)}" target="_blank" class="btn-whatsapp" style="padding: 3px 8px;">💬 واتساب</a>
                     </div>
                   </td>
                   <td style="padding: 8px; font-size: 0.8rem;">
-                    <div style="font-weight: 700;">${m.orig_district}-${m.orig_neighborhood}-ع${m.orig_building}-و${m.orig_unit} (${m.orig_floor_label})</div>
-                    <div style="font-size: 0.72rem; color: #64748b; font-family: monospace;">عقاري: ${m.orig_nat_id || '-'}</div>
+                    <div style="font-weight: 700;">${origDist}-${origNh}-ع${origBld}-و${origUnit} ${origFl ? '(' + origFl + ')' : ''}</div>
+                    ${origNat ? `<div style="font-size: 0.72rem; color: #64748b; font-family: monospace;">عقاري: ${origNat}</div>` : ''}
                   </td>
                   <td style="padding: 8px; font-size: 0.8rem; font-weight: bold; color: #166534;">
-                    <div style="font-weight: 800;">${m.assign_district}-${m.assign_neighborhood}-ع${m.assign_building}-و${m.assign_unit} (${m.assign_floor_label})</div>
-                    <div style="font-size: 0.72rem; color: #15803d; font-family: monospace;">عقاري: ${m.assign_nat_id || '-'}</div>
+                    <div style="font-weight: 800;">${assignDist}-${assignNh}-ع${assignBld}-و${assignUnit} ${assignFl ? '(' + assignFl + ')' : ''}</div>
+                    ${assignNat ? `<div style="font-size: 0.72rem; color: #15803d; font-family: monospace;">عقاري: ${assignNat}</div>` : ''}
+                    ${recvFrom ? `<div style="font-size: 0.74rem; color: #1e40af; font-weight: 700; margin-top: 2px;">🔑 يتسلمها من: ${recvFrom}</div>` : ''}
                   </td>
                 </tr>
               `;
@@ -2181,6 +2219,7 @@ async function showCycleModal(cycleId) {
     `;
 
   } catch (err) {
+    console.error("Cycle modal error:", err);
     content.innerHTML = `<div style="text-align: center; color: red; padding: 1.5rem;">حدث خطأ أثناء جلب أطراف الدورة</div>`;
   }
 }

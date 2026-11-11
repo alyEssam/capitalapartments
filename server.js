@@ -262,10 +262,12 @@ const server = http.createServer(async (req, res) => {
                assign.district as assign_district, assign.neighborhood as assign_neighborhood, assign.building as assign_building,
                assign.unit_number as assign_unit, assign.floor_label as assign_floor_label, assign.model as assign_model, assign.area as assign_area,
                assign.national_property_id as assign_nat_id
+        , giver.full_name as receiving_from_name
         FROM swap_results sr
         JOIN users u ON sr.user_id = u.id
         JOIN apartments orig ON sr.original_apartment_id = orig.id
         JOIN apartments assign ON sr.assigned_apartment_id = assign.id
+        LEFT JOIN users giver ON sr.assigned_apartment_id = giver.original_apartment_id
         WHERE sr.run_id = ? AND sr.cycle_id = ?
         ORDER BY sr.id ASC
       `).all(latestRun.id, cycleId);
@@ -371,6 +373,8 @@ const server = http.createServer(async (req, res) => {
         });
 
         const matchOutput = engine.run();
+        const runId = engine.saveToDatabase(matchOutput);
+        matchOutput.runId = runId;
         return sendJson(res, 200, matchOutput);
       } catch (err) {
         console.error("Match error:", err);
