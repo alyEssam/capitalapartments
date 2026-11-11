@@ -508,6 +508,58 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, outcome);
     }
 
+        // 12b. Admin: Export All Registered Users & Current Preferences to CSV (Excel UTF-8 BOM)
+    if (pathname === "/api/admin/export-users-csv" && method === "GET") {
+      const users = db.db.prepare(`
+        SELECT u.*, 
+               a.code as apt_code, a.district as apt_district, a.neighborhood as apt_neighborhood,
+               a.building as apt_building, a.unit_number as apt_unit, a.floor_label as apt_floor_label,
+               a.model as apt_model, a.area as apt_area, a.meter_price as apt_meter_price,
+               a.total_price as apt_total_price, a.national_property_id as apt_national_id
+        FROM users u
+        LEFT JOIN apartments a ON u.original_apartment_id = a.id
+        ORDER BY u.id ASC
+      `).all();
+
+      let csv = "\uFEFFم,الاسم بالكامل,الرقم القومي,رقم المحمول,جهة العمل / الوزارة,الموقف من التبديل,كود الشقة الأصلية,الحي,المجاورة,العمارة,رقم الشقة,الدور,النموذج,المساحة م²,سعر المتر,إجمالي السعر,الرقم القومي العقاري للشقة,عدد الرغبات المسجلة,الرغبة 1,الرغبة 2,الرغبة 3,الرغبة 4,الرغبة 5,الرغبة 6,الرغبة 7,الرغبة 8,الرغبة 9,الرغبة 10,كود التسجيل,تاريخ التسجيل\n";
+
+      users.forEach((u, idx) => {
+        const prefs = db.db.prepare(`
+          SELECT p.rank, a.code, a.district, a.neighborhood, a.building, a.unit_number, a.area
+          FROM preferences p
+          JOIN apartments a ON p.apartment_id = a.id
+          WHERE p.user_id = ?
+          ORDER BY p.rank ASC
+        `).all(u.id);
+
+        let statusLabel = 'راغب في التبديل';
+        if (u.swap_status === 'AGREED_DIRECT') statusLabel = 'تم التوافق الودي';
+        if (u.swap_status === 'KEPT_ORIGINAL') statusLabel = 'محتفظ بالشقة الأصلية';
+
+        let row = `"${idx + 1}","${u.full_name}","'${u.national_id}'","'${u.phone}'","${u.workplace || ''}","${statusLabel}",` +
+                  `"${u.apt_code || ''}","${u.apt_district || ''}","${u.apt_neighborhood || ''}","${u.apt_building || ''}","${u.apt_unit || ''}","${u.apt_floor_label || ''}","${u.apt_model || ''}","${u.apt_area || ''}","${u.apt_meter_price || ''}","${u.apt_total_price || ''}","'${u.apt_national_id || ''}'",` +
+                  `"${prefs.length}",`;
+
+        for (let i = 1; i <= 10; i++) {
+          const p = prefs.find(x => x.rank === i);
+          if (p) {
+            row += `"${p.code} (${p.district} عمارة ${p.building} شقة ${p.unit_number} مساحة ${p.area}م)",`;
+          } else {
+            row += `"",`;
+          }
+        }
+
+        row += `"${u.confirmation_code || ''}","${u.registered_at || ''}"\n`;
+        csv += row;
+      });
+
+      res.writeHead(200, {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="Housing_Users_Preferences_' + new Date().toISOString().slice(0, 10) + '.csv"'
+      });
+      return res.end(csv);
+    }
+
     // 12. Admin: Export official swap results or Phase 1 participants to CSV (UTF-8 BOM for Excel Arabic)
     if (pathname === "/api/admin/export-csv" && method === "GET") {
       const latestRun = db.db.prepare("SELECT * FROM swap_runs ORDER BY id DESC LIMIT 1").get();
