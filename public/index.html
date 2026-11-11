@@ -200,6 +200,27 @@
                 </div>
               </div>
 
+              <!-- Partner Input Box for AGREED_DIRECT -->
+              <div id="direct-partner-container" style="display: none; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 10px; padding: 1.25rem; margin-top: 0.5rem; margin-bottom: 0.75rem;">
+                <div style="font-weight: 800; color: #92400e; font-size: 0.92rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
+                  <span>🤝 بيانات الزميل الطرف الثاني المتفق معه:</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #b45309; margin-bottom: 0.75rem; line-height: 1.5;">
+                  يرجى كتابة الرقم القومي أو رقم محمول أو كود شقة الزميل المتفق معه. بمجرد أن يسجل زميلك ويكتب بياناتك، سيعتمد النظام التبادل الثنائي بينكما تلقائياً.
+                </div>
+                <div class="grid-2" style="gap: 0.75rem;">
+                  <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; color: #78350f;">الرقم القومي أو رقم محمول أو كود شقة الطرف الثاني: *</label>
+                    <input type="text" id="reg-partner-query" class="form-control" placeholder="مثال: الرقم القومي أو المحمول أو كود الشقة" style="font-size: 0.85rem;" oninput="onPartnerQueryInput()">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; color: #78350f;">ملاحظات الاتفاق الودي (اختياري):</label>
+                    <input type="text" id="reg-partner-notes" class="form-control" placeholder="مثال: تم الاتفاق تليفونياً / عمارة كذا شقة كذا" style="font-size: 0.85rem;">
+                  </div>
+                </div>
+                <div id="partner-preview-box" style="display: none; margin-top: 0.75rem; padding: 0.75rem; border-radius: 8px; background: white; border: 1px solid #fcd34d;"></div>
+              </div>
+
               <div class="decision-choice-3" id="choice-status-kept" onclick="setSwapStatus('KEPT_ORIGINAL')">
                 <input type="radio" name="swap-status-radio" value="KEPT_ORIGINAL" style="margin-top: 4px;">
                 <div>
@@ -599,6 +620,34 @@
               <button type="button" class="btn btn-gold" style="padding: 0.8rem 1.5rem; font-weight: 800;" onclick="submitDirectSwapPair()">
                 🔒 اعتماد التوافق الودي المباشر وإغلاق الشقتين من المنظومة
               </button>
+            </div>
+          </div>
+
+          <!-- Pending Direct Swaps Box -->
+          <div style="background: white; border: 1.5px solid #fed7aa; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <h4 style="font-weight: 800; color: #9a3412; margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 0.4rem;">
+                <span>⏳</span>
+                <span>طلبات التوافق الودي المعلقة (مسجلون اختاروا التوافق الودي بانتظار اكتمال الطرف الثاني):</span>
+              </h4>
+              <span id="pending-direct-count-badge" style="font-size: 0.8rem; background: #ffedd5; color: #9a3412; padding: 2px 8px; border-radius: 12px; font-weight: 700;">0 طلب معلق</span>
+            </div>
+            <div style="overflow-x: auto; max-height: 250px; border: 1px solid var(--border); border-radius: 8px;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                <thead style="background: #fff7ed; text-align: right;">
+                  <tr>
+                    <th style="padding: 0.5rem;">#</th>
+                    <th style="padding: 0.5rem;">الموظف صاحب الطلب</th>
+                    <th style="padding: 0.5rem;">شقته الأصلية</th>
+                    <th style="padding: 0.5rem;">الطرف الثاني المطلوب</th>
+                    <th style="padding: 0.5rem;">ملاحظات المسجل</th>
+                    <th style="padding: 0.5rem;">الإجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="pending-direct-tbody">
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1rem;">لا توجد طلبات توافق معلقة حالياً</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
 

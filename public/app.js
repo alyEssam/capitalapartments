@@ -312,21 +312,79 @@ function setSwapStatus(status) {
     }
   });
 
+  const partnerContainer = document.getElementById("direct-partner-container");
+
   if (status === 'WANTS_SWAP') {
     choiceSwap.className = "decision-choice-3 selected";
     choiceSwap.querySelector('input').checked = true;
+    if (partnerContainer) partnerContainer.style.display = "none";
     if (state.systemPhase === 'PHASE_2_PREFERENCES' && prefBuilder) {
       prefBuilder.style.display = "block";
     }
   } else if (status === 'AGREED_DIRECT') {
     choiceAgreed.className = "decision-choice-3 selected-agreed";
     choiceAgreed.querySelector('input').checked = true;
+    if (partnerContainer) partnerContainer.style.display = "block";
     if (prefBuilder) prefBuilder.style.display = "none";
   } else if (status === 'KEPT_ORIGINAL') {
     choiceKept.className = "decision-choice-3 selected-kept";
     choiceKept.querySelector('input').checked = true;
+    if (partnerContainer) partnerContainer.style.display = "none";
     if (prefBuilder) prefBuilder.style.display = "none";
   }
+}
+
+
+let partnerLookupTimeout = null;
+function onPartnerQueryInput() {
+  const q = document.getElementById("reg-partner-query").value.trim();
+  const box = document.getElementById("partner-preview-box");
+  if (!box) return;
+
+  if (!q || q.length < 3) {
+    box.style.display = "none";
+    return;
+  }
+
+  box.style.display = "block";
+  box.innerHTML = `<span style="color: #64748b; font-size: 0.8rem;">🔍 جارٍ البحث عن بيانات الزميل بالمنظومة...</span>`;
+
+  clearTimeout(partnerLookupTimeout);
+  partnerLookupTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch(`/api/partner-lookup?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data.success && data.partner) {
+        const p = data.partner;
+        const apt = p.apartment;
+        box.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: #15803d; font-weight: 800; font-size: 0.88rem;">
+            <span>✔️ تم العثور على شقة الزميل:</span>
+            <span>${p.name} (${p.workplace || 'جهة العمل غير محددة'})</span>
+          </div>
+          <div style="font-size: 0.8rem; color: #166534; margin-top: 3px;">
+            🏢 شقته: ${apt.district} - مجاورة ${apt.neighborhood} - مبنى ${apt.building} - وحدة ${apt.unit_number} (${apt.floor_label})
+          </div>
+          <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px; font-family: monospace;">
+            كود عقاري: ${apt.national_property_id} | هاتف: ${p.phone || 'غير مسجل'}
+          </div>
+        `;
+        box.style.background = "#f0fdf4";
+        box.style.borderColor = "#86efac";
+      } else {
+        box.innerHTML = `
+          <div style="color: #b45309; font-size: 0.82rem; line-height: 1.5;">
+            ⏳ لم يتم العثور على زميل مسجل بهذا الرقم حالياً بالمنصة.<br>
+            <strong>لا تقلق:</strong> سيتم حفظ طلبك كـ "بانتظار تسجيل الطرف الآخر"، وبمجرد أن يسجل زميلك شقته ويكتب بياناتك، سيعتمد النظام التبادل بينكما تلقائياً، أو يمكن للأدمن اعتماده يدوياً فور تسجيله.
+          </div>
+        `;
+        box.style.background = "#fffbeb";
+        box.style.borderColor = "#fde68a";
+      }
+    } catch (e) {
+      box.style.display = "none";
+    }
+  }, 350);
 }
 
 // =========================================================
@@ -744,6 +802,15 @@ async function handleRegistrationSubmit(e) {
     return;
   }
 
+  if (state.swapStatus === 'AGREED_DIRECT') {
+    const partnerQuery = document.getElementById("reg-partner-query") ? document.getElementById("reg-partner-query").value.trim() : "";
+    if (!partnerQuery) {
+      showToast("يرجى كتابة الرقم القومي أو رقم محمول أو كود شقة الزميل المتفق معه لتأكيد التوافق الودي", "error");
+      if (document.getElementById("reg-partner-query")) document.getElementById("reg-partner-query").focus();
+      return;
+    }
+  }
+
   const payload = {
     fullName: name,
     nationalId: nid,
@@ -752,6 +819,8 @@ async function handleRegistrationSubmit(e) {
     originalApartmentId: origApt,
     wantsSwap: state.swapStatus === 'WANTS_SWAP' ? 1 : 0,
     swapStatus: state.swapStatus,
+    directPartnerNid: (state.swapStatus === 'AGREED_DIRECT' && document.getElementById("reg-partner-query")) ? document.getElementById("reg-partner-query").value.trim() : "",
+    directSwapNotes: (state.swapStatus === 'AGREED_DIRECT' && document.getElementById("reg-partner-notes")) ? document.getElementById("reg-partner-notes").value.trim() : "",
     preferences: (state.systemPhase === 'PHASE_2_PREFERENCES' && state.swapStatus === 'WANTS_SWAP') ? state.preferences.map(p => p.id) : []
   };
 
@@ -1499,6 +1568,17 @@ async function lookupExistingUserPreferences() {
     // 3. Set swap status
     const st = u.swap_status || (u.wants_swap === 1 ? 'WANTS_SWAP' : 'KEPT_ORIGINAL');
     setSwapStatus(st);
+    if (st === 'AGREED_DIRECT') {
+      const qInput = document.getElementById("reg-partner-query");
+      const notesInput = document.getElementById("reg-partner-notes");
+      if (qInput && u.direct_partner_nid) {
+        qInput.value = u.direct_partner_nid;
+        onPartnerQueryInput();
+      }
+      if (notesInput && u.direct_swap_notes) {
+        notesInput.value = u.direct_swap_notes;
+      }
+    }
 
     // 4. Restore preferences (up to 20)
     if (u.preferences && u.preferences.length > 0) {
@@ -2067,7 +2147,80 @@ async function submitDirectSwapPair() {
   }
 }
 
+
+async function loadPendingDirectSwapsTable() {
+  try {
+    const res = await fetch("/api/admin/pending-direct-swaps");
+    const data = await res.json();
+    const tbody = document.getElementById("pending-direct-tbody");
+    const badge = document.getElementById("pending-direct-count-badge");
+    if (!tbody) return;
+
+    if (!data.success || !data.pending || data.pending.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1rem;">لا توجد طلبات توافق معلقة حالياً</td></tr>';
+      if (badge) badge.textContent = "0 طلب معلق";
+      return;
+    }
+
+    if (badge) badge.textContent = `${data.pending.length} طلب معلق`;
+
+    tbody.innerHTML = data.pending.map((u, idx) => {
+      const aptTxt = u.apt_code ? `${u.apt_district}-${u.apt_neighborhood}-ع${u.apt_building}-و${u.apt_unit}` : '-';
+      const claimed = u.direct_partner_nid || 'غير محدد بعد';
+      const notes = u.direct_swap_notes || '-';
+      return `
+        <tr style="border-bottom: 1px solid #fed7aa; background: #fffaf0;">
+          <td style="padding: 0.5rem; font-weight: 700;">${idx + 1}</td>
+          <td style="padding: 0.5rem;">
+            <div style="font-weight: 800; color: #1e3a8a;">${u.full_name}</div>
+            <div style="font-size: 0.74rem; color: #64748b;">${u.workplace || ''} | 📞 ${u.phone}</div>
+            <div style="font-size: 0.72rem; color: #94a3b8; font-family: monospace;">الرقم القومي: ${u.national_id}</div>
+          </td>
+          <td style="padding: 0.5rem; font-size: 0.8rem;">
+            <div style="font-weight: 700;">${aptTxt}</div>
+            <div style="font-size: 0.72rem; color: #64748b; font-family: monospace;">عقاري: ${u.apt_nat_id || ''}</div>
+          </td>
+          <td style="padding: 0.5rem; font-size: 0.82rem; font-weight: 700; color: #b45309;">
+            ${claimed}
+          </td>
+          <td style="padding: 0.5rem; font-size: 0.75rem; color: #64748b;">
+            ${notes}
+          </td>
+          <td style="padding: 0.5rem;">
+            <button type="button" class="btn btn-gold btn-sm" style="font-size: 0.74rem; padding: 3px 8px; font-weight: 700;" onclick="fillAdminDirectSwap('${u.national_id}', '${u.direct_partner_nid || ''}', '${u.direct_swap_notes || ''}')">
+              ⚡ تعبئة واعتماد
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch(e) {
+    console.error("Error loading pending direct swaps:", e);
+  }
+}
+
+function fillAdminDirectSwap(q1, q2, notes) {
+  const input1 = document.getElementById("admin-swap-q1");
+  const input2 = document.getElementById("admin-swap-q2");
+  const notesInput = document.getElementById("admin-swap-notes");
+
+  if (input1) {
+    input1.value = q1;
+    lookupDirectSwapParty(1);
+  }
+  if (input2 && q2) {
+    input2.value = q2;
+    lookupDirectSwapParty(2);
+  }
+  if (notesInput && notes) {
+    notesInput.value = notes;
+  }
+  showToast("تم نقل بيانات الطرفين إلى وحدة الاعتماد أعلاه! راجع التفاصيل ثم اضغط اعتماد التوافق.", "info");
+  if (input1) input1.scrollIntoView({ behavior: 'smooth' });
+}
+
 async function loadDirectSwapsTable() {
+  loadPendingDirectSwapsTable();
   try {
     const res = await fetch("/api/admin/direct-swaps");
     const data = await res.json();

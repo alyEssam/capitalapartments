@@ -339,6 +339,35 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { success: true, swaps });
     }
 
+    if (pathname === "/api/admin/pending-direct-swaps" && method === "GET") {
+      const pending = db.getPendingDirectSwaps();
+      return sendJson(res, 200, { success: true, pending });
+    }
+
+    if (pathname.startsWith("/api/partner-lookup") && method === "GET") {
+      const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+      const q = (parsedUrl.searchParams.get("q") || "").trim();
+      if (!q || q.length < 3) {
+        return sendJson(res, 200, { success: false, message: "يرجى إدخال 3 أحرف أو أرقام على الأقل" });
+      }
+      const match = db.findUserOrApartment(q);
+      if (match && match.user && match.apartment) {
+        return sendJson(res, 200, {
+          success: true,
+          partner: {
+            id: match.user.id,
+            name: match.user.full_name,
+            nid: match.user.national_id,
+            phone: match.user.phone,
+            workplace: match.user.workplace,
+            swapStatus: match.user.swap_status,
+            apartment: match.apartment
+          }
+        });
+      }
+      return sendJson(res, 200, { success: false, message: "لم يتم العثور على زميل مسجل بهذا الرقم حالياً" });
+    }
+
     // 5h. Admin: Cancel Direct Swap
     if (pathname === "/api/admin/cancel-direct-swap" && method === "POST") {
       try {
