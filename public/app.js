@@ -639,6 +639,9 @@ function renderPreferencesList() {
         <div style="font-size: 0.8rem; color: #64748b;">
           ${apt.floor_label} | نموذج ${apt.model} (${apt.area}م²) | ${apt.meter_price.toLocaleString('ar-EG')} ج/م²
         </div>
+        <div style="font-size: 0.75rem; color: #166534; font-family: monospace; font-weight: 700; margin-top: 2px;">
+          الرقم القومي العقاري: ${apt.national_property_id || apt.nationalPropertyId || apt.code}
+        </div>
       </div>
       <div class="pref-actions">
         <button type="button" class="btn btn-outline btn-sm" onclick="movePreference(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>⬆️</button>
@@ -753,6 +756,22 @@ function renderReceipt(user) {
           <div style="margin-top: 4px;"><strong>الموقف من التبديل:</strong> <span style="font-weight: bold; color: ${statusColor};">${statusLabel}</span></div>
         </div>
       </div>
+
+      ${user.preferences && user.preferences.length > 0 ? `
+        <div style="margin-top: 1.25rem; border-top: 1.5px solid #e2e8f0; padding-top: 1rem;">
+          <div style="font-weight: 800; color: #1e3a8a; margin-bottom: 0.5rem; font-size: 0.95rem;">
+            📋 بيان الرغبات المعتمدة المسجلة (${user.preferences.length} رغبة بالرقم القومي العقاري):
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.5rem;">
+            ${user.preferences.map((p, pIdx) => `
+              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.4rem 0.6rem; font-size: 0.78rem;">
+                <div style="font-weight: 700; color: #0f172a;">#${pIdx + 1} - ${p.district} عمارة ${p.building} شقة ${p.unit_number} (${p.floor_label} - نموذج ${p.model})</div>
+                <div style="font-family: monospace; font-size: 0.72rem; color: #166534; font-weight: bold;">عقاري: ${p.national_property_id || p.nationalPropertyId || ''}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
 
       <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed #cbd5e1;">
         <div style="font-size: 0.8rem; color: #64748b;">
@@ -1458,8 +1477,9 @@ function renderPhase1SavedPreferences(preferences) {
           <span style="font-weight: 700; color: #1e3a8a; font-size: 0.9rem;">مجاورة ${p.neighborhood} - عمارة ${p.building} - شقة ${p.unit_number}</span>
           <span style="font-size: 0.8rem; color: #64748b;">(${p.floor_label} - نموذج ${p.model} - مساحة ${p.area}م²)</span>
         </div>
-        <div style="font-size: 0.75rem; color: #166534; font-family: monospace; font-weight: 700; background: #dcfce7; padding: 2px 8px; border-radius: 4px;">
-          ${p.code}
+        <div style="text-align: left;">
+          <div style="font-size: 0.75rem; color: #166534; font-family: monospace; font-weight: 800; background: #dcfce7; padding: 2px 8px; border-radius: 4px;">الرقم العقاري: ${p.national_property_id || p.nationalPropertyId || p.code}</div>
+          <div style="font-size: 0.7rem; color: #64748b; font-family: monospace;">كود: ${p.code}</div>
         </div>
       </div>
     `;

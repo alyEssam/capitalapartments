@@ -522,7 +522,7 @@ const server = http.createServer(async (req, res) => {
       `).all();
 
       let prefHeaders = "";
-      for (let i = 1; i <= 20; i++) { prefHeaders += "  <th>الرغبة " + i + "</th>\n"; }
+      for (let i = 1; i <= 20; i++) { prefHeaders += "  <th>الرغبة " + i + " (الرقم القومي العقاري والتفاصيل)</th>\n"; }
 
       let html = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -569,7 +569,7 @@ ${prefHeaders}  <th>كود التسجيل</th>
 
       users.forEach((u, idx) => {
         const prefs = db.db.prepare(`
-          SELECT p.rank, a.code, a.district, a.neighborhood, a.building, a.unit_number, a.floor_label, a.area
+          SELECT p.rank, a.code, a.district, a.neighborhood, a.building, a.unit_number, a.floor_label, a.model, a.area, a.national_property_id
           FROM preferences p
           JOIN apartments a ON p.apartment_id = a.id
           WHERE p.user_id = ?
@@ -604,7 +604,7 @@ ${prefHeaders}  <th>كود التسجيل</th>
         for (let i = 1; i <= 20; i++) {
           const p = prefs.find(x => x.rank === i);
           if (p) {
-            html += `  <td>${p.code} (${p.district} عمارة ${p.building} شقة ${p.unit_number} ${p.floor_label} مساحة ${p.area}م)</td>\n`;
+            html += `  <td class="text-cell">${p.national_property_id} | ${p.district} عمارة ${p.building} شقة ${p.unit_number} (${p.floor_label} - نموذج ${p.model} - ${p.area}م²)</td>\n`;
           } else {
             html += `  <td></td>\n`;
           }
@@ -639,12 +639,12 @@ ${prefHeaders}  <th>كود التسجيل</th>
       `).all();
 
       let prefCols = "";
-      for (let i = 1; i <= 20; i++) { prefCols += "الرغبة " + i + ","; }
+      for (let i = 1; i <= 20; i++) { prefCols += "الرغبة " + i + " (الرقم العقاري والتفاصيل),"; }
       let csv = "\uFEFFsep=,\nم,الاسم بالكامل,الرقم القومي,رقم المحمول,جهة العمل / الوزارة,الموقف من التبديل,كود الشقة الأصلية,الحي,المجاورة,العمارة,رقم الشقة,الدور,النموذج,المساحة م²,سعر المتر,إجمالي السعر,الرقم القومي العقاري للشقة,عدد الرغبات المسجلة," + prefCols + "كود التسجيل,تاريخ التسجيل\n";
 
       users.forEach((u, idx) => {
         const prefs = db.db.prepare(`
-          SELECT p.rank, a.code, a.district, a.neighborhood, a.building, a.unit_number, a.area
+          SELECT p.rank, a.code, a.district, a.neighborhood, a.building, a.unit_number, a.floor_label, a.model, a.area, a.national_property_id
           FROM preferences p
           JOIN apartments a ON p.apartment_id = a.id
           WHERE p.user_id = ?
@@ -662,7 +662,7 @@ ${prefHeaders}  <th>كود التسجيل</th>
         for (let i = 1; i <= 20; i++) {
           const p = prefs.find(x => x.rank === i);
           if (p) {
-            row += `"${p.code} (${p.district} عمارة ${p.building} شقة ${p.unit_number} مساحة ${p.area}م)",`;
+            row += `"${p.national_property_id} | ${p.district} عمارة ${p.building} شقة ${p.unit_number} (${p.floor_label} - نموذج ${p.model} - ${p.area}م²)",`;
           } else {
             row += `"",`;
           }
