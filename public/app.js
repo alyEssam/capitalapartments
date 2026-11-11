@@ -521,7 +521,12 @@ function filterPickerApts() {
   const selectedIds = new Set(state.preferences.map(p => p.id));
   if (state.selectedAptId) selectedIds.add(state.selectedAptId);
 
+  const totalSwappablePool = state.apartments.filter(a => a.owner_name && a.owner_swap_status === 'WANTS_SWAP' && Number(a.id) !== Number(state.selectedAptId));
+
   let filtered = state.apartments.filter(apt => {
+    // 1. MUST be owned by a registered user who wants to swap!
+    if (!apt.owner_name || apt.owner_swap_status !== 'WANTS_SWAP') return false;
+    // 2. Cannot be user's own apartment or already selected
     if (selectedIds.has(apt.id)) return false;
     if (dist && apt.district !== dist) return false;
     if (nh && apt.neighborhood !== nh) return false;
@@ -540,6 +545,8 @@ function filterPickerApts() {
                     apt.unit_number.toLowerCase().includes(query) ||
                     apt.model.toLowerCase().includes(query) ||
                     apt.national_property_id.includes(query) ||
+                    (apt.owner_name && apt.owner_name.toLowerCase().includes(query)) ||
+                    (apt.owner_workplace && apt.owner_workplace.toLowerCase().includes(query)) ||
                     apt.code.toLowerCase().includes(query);
       if (!match) return false;
     }
@@ -549,7 +556,15 @@ function filterPickerApts() {
   const displayed = filtered.slice(0, 50);
 
   if (displayed.length === 0) {
-    list.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">لا توجد شقق مطابقة للبحث أو تم اختيارها كلها</div>`;
+    list.innerHTML = `
+      <div style="text-align: center; color: var(--text-muted); padding: 1.5rem; background: #f8fafc; border-radius: 8px; border: 1.5px dashed #cbd5e1;">
+        <div style="font-size: 1.5rem; margin-bottom: 0.3rem;">🏢</div>
+        <div style="font-weight: 800; color: #1e3a8a; font-size: 0.95rem;">لا توجد شقق مسجلة ومتاحة للتبادل تطابق هذا البحث</div>
+        <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.3rem;">
+          تقتصر قائمة الاختيار فقط على الشقق التي سجّل زملاؤك رغبتهم في تبادلها بالفعل (متاح حالياً ${totalSwappablePool.length} شقة بالمنصة).
+        </div>
+      </div>
+    `;
     return;
   }
 
@@ -559,14 +574,18 @@ function filterPickerApts() {
     const distBadge = apt.district === 'R3' ? '<span class="badge-r3">R3</span>' : '<span class="badge-r5">R5</span>';
     item.innerHTML = `
       <div>
-        <div style="font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 0.4rem;">
+        <div style="font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
           ${distBadge}
           <span>مجاورة ${apt.neighborhood} - مبنى ${apt.building} - وحدة ${apt.unit_number}</span>
+          <span style="font-size: 0.68rem; background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; font-weight: 700;">🟢 متاح للتبادل</span>
         </div>
         <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">
           ${apt.floor_label} | نموذج ${apt.model} (${apt.area}م²) | ${apt.meter_price.toLocaleString('ar-EG')} ج/م²
         </div>
-        <div style="font-size: 0.72rem; color: #94a3b8; font-family: monospace;">
+        <div style="font-size: 0.74rem; color: #1e40af; margin-top: 2px;">
+          👤 صاحبها: <strong>${apt.owner_name}</strong> (${apt.owner_workplace || 'جهة العمل غير محددة'})
+        </div>
+        <div style="font-size: 0.7rem; color: #94a3b8; font-family: monospace; margin-top: 1px;">
           رقم عقاري: ${apt.national_property_id}
         </div>
       </div>
@@ -581,12 +600,18 @@ function addPreference(aptId) {
     showToast("وصلت للحد الأقصى (20 رغبة)", "error");
     return;
   }
-  if (aptId === state.selectedAptId) {
+  if (Number(aptId) === Number(state.selectedAptId)) {
     showToast("لا يمكنك اختيار شقتك الأصلية ضمن رغبات التبديل!", "error");
     return;
   }
-  const apt = state.apartments.find(a => a.id === aptId);
+  const apt = state.apartments.find(a => a.id === Number(aptId));
   if (!apt) return;
+
+  if (!apt.owner_name || apt.owner_swap_status !== 'WANTS_SWAP') {
+    showToast("عذراً، هذه الشقة غير متاحة للتبادل (صاحبها لم يسجل بعد أو اختار الاحتفاظ بها أو تم توافقه الودي)", "error");
+    return;
+  }
+
   state.preferences.push(apt);
   renderPreferencesList();
   filterPickerApts();
@@ -1054,9 +1079,13 @@ function renderCatalog() {
             <span style="font-size: 0.8rem; color: #16a34a; font-weight: bold;">شقتك الأصلية ✔️</span>
           ` : (isPref ? `
             <span style="font-size: 0.8rem; color: #2563eb; font-weight: bold;">مضافة للرغبات ⭐</span>
-          ` : `
+          ` : (apt.owner_name && apt.owner_swap_status === 'WANTS_SWAP' ? `
             <button class="btn btn-outline btn-sm" onclick="addPreferenceFromCatalog(${apt.id})">➕ إضافة للرغبات</button>
-          `)}
+          ` : `
+            <span style="font-size: 0.74rem; color: #64748b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+              ${!apt.owner_name ? '⚪ غير مسجلة بالقرعة' : (apt.owner_swap_status === 'KEPT_ORIGINAL' ? '🛡️ محتفظ بها' : '🤝 تم التوافق الودي')}
+            </span>
+          `))}
         </div>
       ` : ''}
     `;
