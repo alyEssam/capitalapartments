@@ -746,7 +746,7 @@ function renderReceipt(user) {
         </div>
 
         <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; font-size: 0.9rem;">
-          <div style="font-weight: 700; color: #1e3a8a; margin-bottom: 0.5rem;">الشقة الفائز بها من واقع كراسة الشروط:</div>
+          <div style="font-weight: 700; color: #1e3a8a; margin-bottom: 0.5rem;">الشقة الفائز بها من واقع القرعة التي تمت يوم 15/11/2026:</div>
           <div><strong>الموقع:</strong> ${originalApt ? `${originalApt.district} - مجاورة ${originalApt.neighborhood} - مبنى ${originalApt.building} - وحدة ${originalApt.unit_number}` : ''}</div>
           <div><strong>الدور والنموذج:</strong> ${originalApt ? `${originalApt.floor_label} - نموذج ${originalApt.model} (${originalApt.area} م²)` : ''}</div>
           <div><strong>الرقم القومي العقاري:</strong> ${originalApt ? originalApt.national_property_id : ''}</div>

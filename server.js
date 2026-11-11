@@ -521,7 +521,9 @@ const server = http.createServer(async (req, res) => {
         ORDER BY u.id ASC
       `).all();
 
-      let csv = "\uFEFFم,الاسم بالكامل,الرقم القومي,رقم المحمول,جهة العمل / الوزارة,الموقف من التبديل,كود الشقة الأصلية,الحي,المجاورة,العمارة,رقم الشقة,الدور,النموذج,المساحة م²,سعر المتر,إجمالي السعر,الرقم القومي العقاري للشقة,عدد الرغبات المسجلة,الرغبة 1,الرغبة 2,الرغبة 3,الرغبة 4,الرغبة 5,الرغبة 6,الرغبة 7,الرغبة 8,الرغبة 9,الرغبة 10,كود التسجيل,تاريخ التسجيل\n";
+      let prefCols = "";
+      for (let i = 1; i <= 20; i++) { prefCols += "الرغبة " + i + ","; }
+      let csv = "\uFEFFم,الاسم بالكامل,الرقم القومي,رقم المحمول,جهة العمل / الوزارة,الموقف من التبديل,كود الشقة الأصلية,الحي,المجاورة,العمارة,رقم الشقة,الدور,النموذج,المساحة م²,سعر المتر,إجمالي السعر,الرقم القومي العقاري للشقة,عدد الرغبات المسجلة," + prefCols + "كود التسجيل,تاريخ التسجيل\n";
 
       users.forEach((u, idx) => {
         const prefs = db.db.prepare(`
@@ -540,7 +542,7 @@ const server = http.createServer(async (req, res) => {
                   `"${u.apt_code || ''}","${u.apt_district || ''}","${u.apt_neighborhood || ''}","${u.apt_building || ''}","${u.apt_unit || ''}","${u.apt_floor_label || ''}","${u.apt_model || ''}","${u.apt_area || ''}","${u.apt_meter_price || ''}","${u.apt_total_price || ''}","'${u.apt_national_id || ''}'",` +
                   `"${prefs.length}",`;
 
-        for (let i = 1; i <= 10; i++) {
+        for (let i = 1; i <= 20; i++) {
           const p = prefs.find(x => x.rank === i);
           if (p) {
             row += `"${p.code} (${p.district} عمارة ${p.building} شقة ${p.unit_number} مساحة ${p.area}م)",`;
