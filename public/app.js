@@ -309,6 +309,7 @@ function initFormListeners() {
       }
     } else {
       feedback.textContent = "يتم استخراج تاريخ الميلاد والسن تلقائياً";
+      applyDirectSwapLock(null);
     }
   });
 
@@ -1558,6 +1559,64 @@ async function handleChangePassword(e) {
   }
 }
 
+
+function applyDirectSwapLock(user) {
+  const alertEl = document.getElementById("locked-swap-alert");
+  const choiceSwap = document.getElementById("choice-status-swap");
+  const choiceKept = document.getElementById("choice-status-kept");
+  const choiceAgreed = document.getElementById("choice-status-agreed");
+  const distSelect = document.getElementById("reg-district-select");
+  const nhSelect = document.getElementById("reg-nh-select");
+  const bldgSelect = document.getElementById("reg-bldg-select");
+  const unitSelect = document.getElementById("reg-unit-select");
+  const qInput = document.getElementById("reg-partner-query");
+  const notesInput = document.getElementById("reg-partner-notes");
+  const quickNid = document.getElementById("reg-quick-nid");
+
+  if (user && user.isDirectSwapLocked) {
+    if (alertEl) {
+      alertEl.style.display = "block";
+      alertEl.innerHTML = `
+        <div style="font-weight: 800; color: #b45309; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🔒</span>
+          <span>تم اعتماد وتفعيل التبادل الثنائي المباشر رسمياً (حالة مقفلة ومؤكدة):</span>
+        </div>
+        <div style="font-size: 0.84rem; color: #78350f; margin-top: 5px; line-height: 1.5;">
+          أنت والزميل الطرف الثاني مفعلان في المنظومة كـ <strong>تبادل ثنائي معتمد رسمي</strong> برقم اعتماد (#${user.activeDirectSwapId || 'DIRECT'}).
+          وفقاً لضوابط لجنة التبديل الرسمية لمنع التراجع الفردي، <strong>لا يمكن الرجوع عن التوافق أو تعديل الحالة إلا من خلال الإدارة ولجنة التبديل</strong> بعد تقديم طلب رسمي لإلغاء الاعتماد من لوحة الإدارة.
+        </div>
+        ${user.partner ? `
+          <div style="margin-top: 0.65rem; padding: 0.6rem 0.85rem; background: white; border-radius: 8px; border: 1.5px solid #fcd34d; font-size: 0.82rem; color: #92400e;">
+            🤝 <strong>الزميل المتوافق معه:</strong> ${escapeHtml(user.partner.full_name)} (${user.partner.workplace || 'جهة العمل غير محددة'}) | 📞 ${user.partner.phone}
+            <br>
+            🏢 <strong>الشقة المخصصة لك منه:</strong> حي ${user.partner.apt_district} - مجاورة ${user.partner.apt_neighborhood} - عمارة ${user.partner.apt_building} - شقة ${user.partner.apt_unit} (${user.partner.apt_floor_label})
+          </div>
+        ` : ''}
+      `;
+    }
+
+    if (choiceSwap) { choiceSwap.style.pointerEvents = "none"; choiceSwap.style.opacity = "0.45"; }
+    if (choiceKept) { choiceKept.style.pointerEvents = "none"; choiceKept.style.opacity = "0.45"; }
+    if (choiceAgreed) { choiceAgreed.style.pointerEvents = "none"; choiceAgreed.style.opacity = "1"; }
+    if (distSelect) distSelect.disabled = true;
+    if (nhSelect) nhSelect.disabled = true;
+    if (bldgSelect) bldgSelect.disabled = true;
+    if (unitSelect) unitSelect.disabled = true;
+    if (qInput) qInput.readOnly = true;
+    if (notesInput) notesInput.readOnly = true;
+    if (quickNid) quickNid.disabled = true;
+  } else {
+    if (alertEl) alertEl.style.display = "none";
+    if (choiceSwap) { choiceSwap.style.pointerEvents = "auto"; choiceSwap.style.opacity = "1"; }
+    if (choiceKept) { choiceKept.style.pointerEvents = "auto"; choiceKept.style.opacity = "1"; }
+    if (choiceAgreed) { choiceAgreed.style.pointerEvents = "auto"; choiceAgreed.style.opacity = "1"; }
+    if (distSelect) distSelect.disabled = false;
+    if (qInput) qInput.readOnly = false;
+    if (notesInput) notesInput.readOnly = false;
+    if (quickNid) quickNid.disabled = false;
+  }
+}
+
 async function lookupExistingUserPreferences() {
   const nid = document.getElementById("reg-nid").value.trim();
   if (!nid || nid.length !== 14) {
@@ -1644,10 +1703,12 @@ async function lookupExistingUserPreferences() {
       renderPreferencesList();
       filterPickerApts();
       renderPhase1SavedPreferences(state.preferences);
-      showToast(`مرحباً أستاذ ${u.full_name}! تم استرجاع بياناتك وشقتك و (${u.preferences.length}) رغبة مسجلة بنجاح.`, "success");
+      applyDirectSwapLock(u);
+      showToast(`مرحباً أستاذ ${u.full_name}! تم استرجاع بياناتك وشقتك و (${u.preferences.length}) رغبة مسجلة بنجاح.` + (u.isDirectSwapLocked ? " 🔒 (توافق ثنائي معتمد ومقفل)" : ""), "success");
     } else {
       renderPhase1SavedPreferences([]);
-      showToast(`مرحباً أستاذ ${u.full_name}! تم استرجاع بياناتك وشقتك الأصلية بنجاح.`, "success");
+      applyDirectSwapLock(u);
+      showToast(`مرحباً أستاذ ${u.full_name}! تم استرجاع بياناتك وشقتك الأصلية بنجاح.` + (u.isDirectSwapLocked ? " 🔒 (توافق ثنائي معتمد ومقفل)" : ""), "success");
     }
 
   } catch(e) {
