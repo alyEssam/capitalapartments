@@ -98,8 +98,9 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 400, { success: false, message: "الرقم القومي يجب أن يتكون من 14 رقماً صحيحاً" });
       }
 
-      if (body.wantsSwap && (!body.preferences || body.preferences.length === 0)) {
-        return sendJson(res, 400, { success: false, message: "طالما اخترت الرغبة في التبديل، يجب اختيار رغبة واحدة على الأقل من قائمة الشقق" });
+      // Only require preferences during PHASE_2_PREFERENCES
+      if (currentPhase === "PHASE_2_PREFERENCES" && body.wantsSwap && (!body.preferences || body.preferences.length === 0)) {
+        return sendJson(res, 400, { success: false, message: "طالما اخترت الرغبة في التبديل في المرحلة الثانية، يجب اختيار رغبة واحدة على الأقل من قائمة الشقق" });
       }
 
       const updatedUser = db.saveUserRegistration(body);
