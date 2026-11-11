@@ -1634,6 +1634,12 @@ async function runMatchingSimulation() {
       state.latestMatchData = data;
       renderMatchingResults(data);
       showToast("تم الانتهاء من المطابقة الآلية بنجاح!", "success");
+      const area = document.getElementById("matching-results-area");
+      if (area) {
+        area.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      showToast(data.message || "فشل تشغيل خوارزمية التوفيق", "error");
     }
   } catch (err) {
     showToast("حدث خطأ أثناء تشغيل خوارزمية التوفيق", "error");

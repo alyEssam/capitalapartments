@@ -360,17 +360,22 @@ const server = http.createServer(async (req, res) => {
 
 // 6. Admin: Run matching simulation / preview
     if (pathname === "/api/admin/match" && method === "POST") {
-      const body = await parseBody(req);
-      const rule = body.priorityRule || db.getSetting("priority_rule", "random_draw");
-      const allowCycles = body.allowCycles !== false;
+      try {
+        const body = await parseBody(req);
+        const rule = body.priorityRule || db.getSetting("priority_rule", "random_draw");
+        const allowCycles = body.allowCycles !== false;
 
-      const engine = new HousingMatchingEngine({
-        priorityRule: rule,
-        allowCycles: allowCycles
-      });
+        const engine = new HousingMatchingEngine({
+          priorityRule: rule,
+          allowCycles: allowCycles
+        });
 
-      const matchOutput = engine.run();
-      return sendJson(res, 200, matchOutput);
+        const matchOutput = engine.run();
+        return sendJson(res, 200, matchOutput);
+      } catch (err) {
+        console.error("Match error:", err);
+        return sendJson(res, 500, { success: false, message: err.message });
+      }
     }
 
     // 6b. Admin: Get Latest Saved Match & Cycles
@@ -453,19 +458,24 @@ const server = http.createServer(async (req, res) => {
 
     // 7. Admin: Commit / Save matching run
     if (pathname === "/api/admin/save-match" && method === "POST") {
-      const body = await parseBody(req);
-      const rule = body.priorityRule || db.getSetting("priority_rule", "random_draw");
+      try {
+        const body = await parseBody(req);
+        const rule = body.priorityRule || db.getSetting("priority_rule", "random_draw");
 
-      const engine = new HousingMatchingEngine({ priorityRule: rule });
-      const matchOutput = engine.run();
-      const runId = engine.saveToDatabase(matchOutput);
+        const engine = new HousingMatchingEngine({ priorityRule: rule });
+        const matchOutput = engine.run();
+        const runId = engine.saveToDatabase(matchOutput);
 
-      return sendJson(res, 200, {
-        success: true,
-        message: "تم حفظ واعتماد نتائج التوفيق بنجاح",
-        runId,
-        stats: matchOutput.satisfaction
-      });
+        return sendJson(res, 200, {
+          success: true,
+          message: "تم حفظ واعتماد نتائج التوفيق بنجاح",
+          runId,
+          stats: matchOutput.satisfaction
+        });
+      } catch (err) {
+        console.error("Save match error:", err);
+        return sendJson(res, 500, { success: false, message: err.message });
+      }
     }
 
     // 8. Admin: Toggle publish results
