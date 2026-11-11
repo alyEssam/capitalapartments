@@ -98,10 +98,7 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 400, { success: false, message: "الرقم القومي يجب أن يتكون من 14 رقماً صحيحاً" });
       }
 
-      // Only require preferences during PHASE_2_PREFERENCES
-      if (currentPhase === "PHASE_2_PREFERENCES" && body.wantsSwap && (!body.preferences || body.preferences.length === 0)) {
-        return sendJson(res, 400, { success: false, message: "طالما اخترت الرغبة في التبديل في المرحلة الثانية، يجب اختيار رغبة واحدة على الأقل من قائمة الشقق" });
-      }
+      // Preferences in Phase 2 are optional: employees can opt into WANTS_SWAP purely for 1-to-1 catalog visibility without entering multi-swap lottery preferences
 
       try {
         const updatedUser = db.saveUserRegistration(body);

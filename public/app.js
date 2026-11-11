@@ -829,17 +829,14 @@ async function handleRegistrationSubmit(e) {
     return;
   }
 
-  if (state.systemPhase === 'PHASE_2_PREFERENCES' && state.swapStatus === 'WANTS_SWAP' && state.preferences.length === 0) {
-    showToast("طالما اخترت التبديل، يرجى اختيار رغبة واحدة على الأقل من كراسة الشروط", "error");
-    return;
-  }
+  // Preferences in Phase 2 are optional: employees can register as WANTS_SWAP with 0 preferences to be visible in the catalog for 1-to-1 swap.
 
+  // If AGREED_DIRECT has a partner query, validate/use it; if empty, allow saving as pending agreement
   if (state.swapStatus === 'AGREED_DIRECT') {
     const partnerQuery = document.getElementById("reg-partner-query") ? document.getElementById("reg-partner-query").value.trim() : "";
     if (!partnerQuery) {
-      showToast("يرجى كتابة الرقم القومي أو رقم محمول أو كود شقة الزميل المتفق معه لتأكيد التوافق الودي", "error");
-      if (document.getElementById("reg-partner-query")) document.getElementById("reg-partner-query").focus();
-      return;
+      // Soft guidance toast rather than blocking error
+      showToast("💡 تم تسجيل رغبتك بالتوافق الودي، ويمكنك كتابة بيانات الزميل لاحقاً لتأكيد الربط الآلي الفوري", "info");
     }
   }
 
@@ -867,7 +864,11 @@ async function handleRegistrationSubmit(e) {
     const data = await res.json();
     if (data.success) {
       setCurrentUser(data.user);
-      showToast("تم حفظ بياناتك بنجاح وحساب رقمك العشوائي المعتمد للمفاضلة!", "success");
+      if (data.user.swap_status === 'WANTS_SWAP' && (!data.user.preferences || data.user.preferences.length === 0)) {
+        showToast("تم حفظ بياناتك بنجاح! شقتك ومواصفاتك معروضة الآن بالكتالوج للتواصل المباشر 1to1 مع الزملاء", "success");
+      } else {
+        showToast("تم حفظ بياناتك بنجاح وحساب رقمك العشوائي المعتمد للمفاضلة!", "success");
+      }
       renderReceipt(data.user);
       loadStats();
       loadApartments();
