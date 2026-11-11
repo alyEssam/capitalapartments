@@ -71,6 +71,7 @@ function checkAreaBracketMatch(apt, bracketKey) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  initCondolenceRibbon();
   initTabs();
   fetchSystemPhase();
   loadApartments();
@@ -2739,4 +2740,29 @@ function handleDirectCall(aptId) {
   }
 
   window.location.href = `tel:${apt.owner_phone}`;
+}
+
+
+// =========================================================
+// CONDOLENCE RIBBON HANDLERS (DR. MAGDA)
+// =========================================================
+function initCondolenceRibbon() {
+  const isDismissed = localStorage.getItem("condolence_magda_dismissed");
+  const ribbon = document.getElementById("condolence-ribbon");
+  if (isDismissed === "true" && ribbon) {
+    ribbon.style.display = "none";
+  }
+}
+
+function dismissCondolence() {
+  const ribbon = document.getElementById("condolence-ribbon");
+  if (ribbon) {
+    ribbon.style.opacity = "0";
+    setTimeout(() => {
+      ribbon.style.display = "none";
+      try {
+        localStorage.setItem("condolence_magda_dismissed", "true");
+      } catch(e) {}
+    }, 300);
+  }
 }
