@@ -508,7 +508,124 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, outcome);
     }
 
-        // 12b. Admin: Export All Registered Users & Current Preferences to CSV (Excel UTF-8 BOM)
+        // 12c. Admin: Export All Registered Users & 20 Preferences to Native Excel (.xls)
+    if (pathname === "/api/admin/export-users-excel" && method === "GET") {
+      const users = db.db.prepare(`
+        SELECT u.*, 
+               a.code as apt_code, a.district as apt_district, a.neighborhood as apt_neighborhood,
+               a.building as apt_building, a.unit_number as apt_unit, a.floor_label as apt_floor_label,
+               a.model as apt_model, a.area as apt_area, a.meter_price as apt_meter_price,
+               a.total_price as apt_total_price, a.national_property_id as apt_national_id
+        FROM users u
+        LEFT JOIN apartments a ON u.original_apartment_id = a.id
+        ORDER BY u.id ASC
+      `).all();
+
+      let prefHeaders = "";
+      for (let i = 1; i <= 20; i++) { prefHeaders += "  <th>الرغبة " + i + "</th>\n"; }
+
+      let html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<style>
+  table { border-collapse: collapse; width: 100%; font-family: Calibri, 'Segoe UI', Tahoma, Arial, sans-serif; }
+  th { background-color: #1e3a8a; color: white; border: 1px solid #cbd5e1; padding: 8px 12px; font-size: 13px; text-align: center; }
+  td { border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 12px; text-align: center; }
+  .text-cell { mso-number-format:"\\@"; }
+  tr:nth-child(even) { background-color: #f8fafc; }
+</style>
+</head>
+<body>
+<h2>كشف بيانات الموظفين المسجلين والرغبات التبادلية - كراسة شروط العاصمة الإدارية</h2>
+<p>تاريخ التصدير: ${new Date().toLocaleString('ar-EG')}</p>
+<table border="1">
+<thead>
+<tr>
+  <th>م</th>
+  <th>الاسم بالكامل</th>
+  <th>الرقم القومي</th>
+  <th>رقم المحمول</th>
+  <th>جهة العمل / الوزارة</th>
+  <th>الموقف من التبديل</th>
+  <th>كود الشقة الأصلية</th>
+  <th>الحي</th>
+  <th>المجاورة</th>
+  <th>العمارة</th>
+  <th>رقم الشقة</th>
+  <th>الدور</th>
+  <th>النموذج</th>
+  <th>المساحة م²</th>
+  <th>سعر المتر</th>
+  <th>إجمالي السعر</th>
+  <th>الرقم القومي العقاري للشقة</th>
+  <th>عدد الرغبات</th>
+${prefHeaders}  <th>كود التسجيل</th>
+  <th>تاريخ التسجيل</th>
+</tr>
+</thead>
+<tbody>
+`;
+
+      users.forEach((u, idx) => {
+        const prefs = db.db.prepare(`
+          SELECT p.rank, a.code, a.district, a.neighborhood, a.building, a.unit_number, a.floor_label, a.area
+          FROM preferences p
+          JOIN apartments a ON p.apartment_id = a.id
+          WHERE p.user_id = ?
+          ORDER BY p.rank ASC
+        `).all(u.id);
+
+        let statusLabel = 'راغب في التبديل';
+        if (u.swap_status === 'AGREED_DIRECT') statusLabel = 'تم التوافق الودي';
+        if (u.swap_status === 'KEPT_ORIGINAL') statusLabel = 'محتفظ بالشقة الأصلية';
+
+        html += `<tr>
+  <td>${idx + 1}</td>
+  <td>${u.full_name}</td>
+  <td class="text-cell">${u.national_id}</td>
+  <td class="text-cell">${u.phone}</td>
+  <td>${u.workplace || ''}</td>
+  <td>${statusLabel}</td>
+  <td>${u.apt_code || ''}</td>
+  <td>${u.apt_district || ''}</td>
+  <td>${u.apt_neighborhood || ''}</td>
+  <td>${u.apt_building || ''}</td>
+  <td>${u.apt_unit || ''}</td>
+  <td>${u.apt_floor_label || ''}</td>
+  <td>${u.apt_model || ''}</td>
+  <td>${u.apt_area || ''}</td>
+  <td>${u.apt_meter_price ? u.apt_meter_price.toLocaleString('ar-EG') : ''}</td>
+  <td>${u.apt_total_price ? u.apt_total_price.toLocaleString('ar-EG') : ''}</td>
+  <td class="text-cell">${u.apt_national_id || ''}</td>
+  <td>${prefs.length}</td>
+`;
+
+        for (let i = 1; i <= 20; i++) {
+          const p = prefs.find(x => x.rank === i);
+          if (p) {
+            html += `  <td>${p.code} (${p.district} عمارة ${p.building} شقة ${p.unit_number} ${p.floor_label} مساحة ${p.area}م)</td>\n`;
+          } else {
+            html += `  <td></td>\n`;
+          }
+        }
+
+        html += `  <td>${u.confirmation_code || ''}</td>
+  <td>${u.registered_at || ''}</td>
+</tr>
+`;
+      });
+
+      html += `</tbody></table></body></html>`;
+
+      res.writeHead(200, {
+        "Content-Type": "application/vnd.ms-excel; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="Housing_Users_Preferences_' + new Date().toISOString().slice(0, 10) + '.xls"'
+      });
+      return res.end(html);
+    }
+
+    // 12b. Admin: Export All Registered Users & Current Preferences to CSV (Excel UTF-8 BOM)
     if (pathname === "/api/admin/export-users-csv" && method === "GET") {
       const users = db.db.prepare(`
         SELECT u.*, 
@@ -523,7 +640,7 @@ const server = http.createServer(async (req, res) => {
 
       let prefCols = "";
       for (let i = 1; i <= 20; i++) { prefCols += "الرغبة " + i + ","; }
-      let csv = "\uFEFFم,الاسم بالكامل,الرقم القومي,رقم المحمول,جهة العمل / الوزارة,الموقف من التبديل,كود الشقة الأصلية,الحي,المجاورة,العمارة,رقم الشقة,الدور,النموذج,المساحة م²,سعر المتر,إجمالي السعر,الرقم القومي العقاري للشقة,عدد الرغبات المسجلة," + prefCols + "كود التسجيل,تاريخ التسجيل\n";
+      let csv = "\uFEFFsep=,\nم,الاسم بالكامل,الرقم القومي,رقم المحمول,جهة العمل / الوزارة,الموقف من التبديل,كود الشقة الأصلية,الحي,المجاورة,العمارة,رقم الشقة,الدور,النموذج,المساحة م²,سعر المتر,إجمالي السعر,الرقم القومي العقاري للشقة,عدد الرغبات المسجلة," + prefCols + "كود التسجيل,تاريخ التسجيل\n";
 
       users.forEach((u, idx) => {
         const prefs = db.db.prepare(`
