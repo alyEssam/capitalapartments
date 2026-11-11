@@ -1,3 +1,26 @@
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function appendNote(elementId, text) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const current = el.value.trim();
+  if (!current) {
+    el.value = text;
+  } else if (!current.includes(text)) {
+    el.value = current + ' - ' + text;
+  }
+  el.focus();
+}
+
 // public/app.js - Multi-Phase Housing Swap Platform with 1-to-1 Direct Marketplace
 let state = {
   apartments: [],
@@ -313,11 +336,13 @@ function setSwapStatus(status) {
   });
 
   const partnerContainer = document.getElementById("direct-partner-container");
+  const wishesContainer = document.getElementById("swap-wishes-container");
 
   if (status === 'WANTS_SWAP') {
     choiceSwap.className = "decision-choice-3 selected";
     choiceSwap.querySelector('input').checked = true;
     if (partnerContainer) partnerContainer.style.display = "none";
+    if (wishesContainer) wishesContainer.style.display = "block";
     if (state.systemPhase === 'PHASE_2_PREFERENCES' && prefBuilder) {
       prefBuilder.style.display = "block";
     }
@@ -325,11 +350,13 @@ function setSwapStatus(status) {
     choiceAgreed.className = "decision-choice-3 selected-agreed";
     choiceAgreed.querySelector('input').checked = true;
     if (partnerContainer) partnerContainer.style.display = "block";
+    if (wishesContainer) wishesContainer.style.display = "none";
     if (prefBuilder) prefBuilder.style.display = "none";
   } else if (status === 'KEPT_ORIGINAL') {
     choiceKept.className = "decision-choice-3 selected-kept";
     choiceKept.querySelector('input').checked = true;
     if (partnerContainer) partnerContainer.style.display = "none";
+    if (wishesContainer) wishesContainer.style.display = "none";
     if (prefBuilder) prefBuilder.style.display = "none";
   }
 }
@@ -642,6 +669,8 @@ function filterPickerApts() {
                     apt.national_property_id.includes(query) ||
                     (apt.owner_name && apt.owner_name.toLowerCase().includes(query)) ||
                     (apt.owner_workplace && apt.owner_workplace.toLowerCase().includes(query)) ||
+                    (apt.owner_desired_notes && apt.owner_desired_notes.toLowerCase().includes(query)) ||
+                    (apt.owner_undesired_notes && apt.owner_undesired_notes.toLowerCase().includes(query)) ||
                     apt.code.toLowerCase().includes(query);
       if (!match) return false;
     }
@@ -680,6 +709,8 @@ function filterPickerApts() {
         <div style="font-size: 0.74rem; color: #1e40af; margin-top: 2px;">
           👤 صاحبها: <strong>${apt.owner_name}</strong> (${apt.owner_workplace || 'جهة العمل غير محددة'})
         </div>
+        ${apt.owner_desired_notes ? `<div style="font-size: 0.73rem; color: #15803d; font-weight: 700; margin-top: 2px;">🎯 المطلوب: ${escapeHtml(apt.owner_desired_notes)}</div>` : ""}
+        ${apt.owner_undesired_notes ? `<div style="font-size: 0.73rem; color: #b91c1c; font-weight: 700; margin-top: 2px;">⛔ غير المرغوب: ${escapeHtml(apt.owner_undesired_notes)}</div>` : ""}
         <div style="font-size: 0.7rem; color: #94a3b8; font-family: monospace; margin-top: 1px;">
           رقم عقاري: ${apt.national_property_id}
         </div>
@@ -819,6 +850,8 @@ async function handleRegistrationSubmit(e) {
     originalApartmentId: origApt,
     wantsSwap: state.swapStatus === 'WANTS_SWAP' ? 1 : 0,
     swapStatus: state.swapStatus,
+    swapDesiredNotes: document.getElementById("reg-desired-notes") ? document.getElementById("reg-desired-notes").value.trim() : "",
+    swapUndesiredNotes: document.getElementById("reg-undesired-notes") ? document.getElementById("reg-undesired-notes").value.trim() : "",
     directPartnerNid: (state.swapStatus === 'AGREED_DIRECT' && document.getElementById("reg-partner-query")) ? document.getElementById("reg-partner-query").value.trim() : "",
     directSwapNotes: (state.swapStatus === 'AGREED_DIRECT' && document.getElementById("reg-partner-notes")) ? document.getElementById("reg-partner-notes").value.trim() : "",
     preferences: (state.systemPhase === 'PHASE_2_PREFERENCES' && state.swapStatus === 'WANTS_SWAP') ? state.preferences.map(p => p.id) : []
@@ -891,6 +924,12 @@ function renderReceipt(user) {
           <div><strong>الدور والنموذج:</strong> ${originalApt ? `${originalApt.floor_label} - نموذج ${originalApt.model} (${originalApt.area} م²)` : ''}</div>
           <div><strong>الرقم القومي العقاري:</strong> ${originalApt ? originalApt.national_property_id : ''}</div>
           <div style="margin-top: 4px;"><strong>الموقف من التبديل:</strong> <span style="font-weight: bold; color: ${statusColor};">${statusLabel}</span></div>
+          ${(user.swap_desired_notes || user.swap_undesired_notes) ? `
+            <div style="margin-top: 6px; padding: 6px 8px; background: white; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 0.8rem;">
+              ${user.swap_desired_notes ? `<div style="color: #15803d; font-weight: 700;">🎯 <strong>المطلوب:</strong> ${escapeHtml(user.swap_desired_notes)}</div>` : ""}
+              ${user.swap_undesired_notes ? `<div style="color: #b91c1c; font-weight: 700; margin-top: 2px;">⛔ <strong>غير المرغوب:</strong> ${escapeHtml(user.swap_undesired_notes)}</div>` : ""}
+            </div>
+          ` : ""}
         </div>
       </div>
 
@@ -1065,6 +1104,8 @@ function renderCatalog() {
                     a.national_property_id.includes(query) ||
                     (a.owner_name && a.owner_name.toLowerCase().includes(query)) ||
                     (a.owner_workplace && a.owner_workplace.toLowerCase().includes(query)) ||
+                    (a.owner_desired_notes && a.owner_desired_notes.toLowerCase().includes(query)) ||
+                    (a.owner_undesired_notes && a.owner_undesired_notes.toLowerCase().includes(query)) ||
                     a.code.toLowerCase().includes(query);
       if (!match) return false;
     }
@@ -1112,6 +1153,16 @@ function renderCatalog() {
             <div style="font-size: 0.76rem; color: #15803d; margin-bottom: 6px;">
               🏛️ <strong>الوزارة:</strong> ${apt.owner_workplace || 'غير محددة'}
             </div>
+            ${(apt.owner_desired_notes || apt.owner_undesired_notes) ? `
+              <div style="background: white; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; font-size: 0.77rem; line-height: 1.45;">
+                ${apt.owner_desired_notes ? `<div style="color: #15803d; font-weight: 700; margin-bottom: 2px;">🎯 <strong>المطلوب:</strong> ${escapeHtml(apt.owner_desired_notes)}</div>` : ""}
+                ${apt.owner_undesired_notes ? `<div style="color: #b91c1c; font-weight: 700;">⛔ <strong>غير مرغوب:</strong> ${escapeHtml(apt.owner_undesired_notes)}</div>` : ""}
+              </div>
+            ` : `
+              <div style="background: white; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; font-size: 0.73rem; color: #64748b;">
+                💬 لم يكتب شروطاً خاصة (تواصل معه لمعرفة رغبته)
+              </div>
+            `}
             <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
               <button type="button" class="btn-whatsapp" onclick="handleDirectWhatsApp(${apt.id})">
                 💬 واتساب مباشر
@@ -1568,6 +1619,10 @@ async function lookupExistingUserPreferences() {
     // 3. Set swap status
     const st = u.swap_status || (u.wants_swap === 1 ? 'WANTS_SWAP' : 'KEPT_ORIGINAL');
     setSwapStatus(st);
+    const desInput = document.getElementById("reg-desired-notes");
+    const undesInput = document.getElementById("reg-undesired-notes");
+    if (desInput) desInput.value = u.swap_desired_notes || "";
+    if (undesInput) undesInput.value = u.swap_undesired_notes || "";
     if (st === 'AGREED_DIRECT') {
       const qInput = document.getElementById("reg-partner-query");
       const notesInput = document.getElementById("reg-partner-notes");
@@ -1659,6 +1714,14 @@ async function viewEmployeeDesires(nid) {
       `;
     } else {
       ownedBox.innerHTML = `لم يتم تحديد الشقة الأصلية`;
+    }
+    if (u.swap_desired_notes || u.swap_undesired_notes) {
+      ownedBox.innerHTML += `
+        <div style="margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed #cbd5e1; font-size: 0.8rem;">
+          ${u.swap_desired_notes ? `<div style="color: #15803d; font-weight: 700;">🎯 <strong>المطلوب:</strong> ${escapeHtml(u.swap_desired_notes)}</div>` : ""}
+          ${u.swap_undesired_notes ? `<div style="color: #b91c1c; font-weight: 700; margin-top: 2px;">⛔ <strong>غير المرغوب:</strong> ${escapeHtml(u.swap_undesired_notes)}</div>` : ""}
+        </div>
+      `;
     }
 
     const tableContainer = document.getElementById("modal-preferences-table-container");
@@ -2582,7 +2645,11 @@ function handleDirectWhatsApp(aptId) {
     myAptInfo = `، وشقتي الحالية المعروضة للتبادل هي: (حي ${myApt.district}، عمارة ${myApt.building}، شقة ${myApt.unit_number}، الدور ${myApt.floor_label}، نموذج ${myApt.model}، مساحة ${myApt.area}م²)`;
   }
 
-  const message = `السلام عليكم أستاذ ${apt.owner_name}، بخصوص شقتكم في كراسة الشروط الرسمية (حي ${apt.district}، عمارة ${apt.building}، شقة ${apt.unit_number})، ${senderInfo}${myAptInfo}، وأرغب في التنسيق معكم للتبادل الثنائي الودي.`;
+  let wishesMention = "";
+  if (apt.owner_desired_notes) {
+    wishesMention = `، واطلعت على رغبتكم بالمنصة: (${apt.owner_desired_notes})`;
+  }
+  const message = `السلام عليكم أستاذ ${apt.owner_name}، بخصوص شقتكم في كراسة الشروط الرسمية (حي ${apt.district}، عمارة ${apt.building}، شقة ${apt.unit_number})، ${senderInfo}${myAptInfo}${wishesMention}، وأرغب في التنسيق معكم للتبادل الثنائي الودي.`;
 
   const cleanPhone = (apt.owner_phone || '').replace(/\D/g, '').replace(/^0/, '');
   const url = `https://wa.me/20${cleanPhone}?text=${encodeURIComponent(message)}`;

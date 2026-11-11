@@ -694,3 +694,34 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+.tag-pill {
+  cursor: pointer;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  user-select: none;
+  border: 1px solid #bae6fd;
+  transition: all 0.15s ease;
+  display: inline-block;
+}
+
+.tag-pill:hover {
+  background: #0284c7;
+  color: white;
+}
+
+.tag-pill-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.tag-pill-danger:hover {
+  background: #dc2626;
+  color: white;
+}

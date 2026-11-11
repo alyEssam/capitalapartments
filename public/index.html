@@ -188,7 +188,49 @@
                 </div>
               </div>
 
-              <div class="decision-choice-3" id="choice-status-agreed" onclick="setSwapStatus('AGREED_DIRECT')">
+                            <!-- Preferences / Desires & Refusals Comment Box for WANTS_SWAP -->
+              <div id="swap-wishes-container" style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 1.25rem; margin-top: 0.25rem; margin-bottom: 0.5rem;">
+                <div style="font-weight: 800; color: #166534; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
+                  <span>📝</span>
+                  <span>تفضيلات ومواصفات الشقة المطلوبة وغير المرغوبة (تظهر لزملائك في الكتالوج للتواصل 1to1):</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #15803d; margin-bottom: 0.85rem; line-height: 1.5;">
+                  اكتب هنا ما ترغب به وما ترفضه في الشقة البديلة، لتسهيل تواصل الزملاء معك للتبادل المباشر (One-to-One) أو التوافق الودي.
+                </div>
+
+                <div class="grid-2" style="gap: 1rem;">
+                  <div>
+                    <label style="font-size: 0.84rem; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 4px;">
+                      <span>🎯</span>
+                      <span>المواصفات المرغوبة (ما أبحث عنه):</span>
+                    </label>
+                    <textarea id="reg-desired-notes" class="form-control" rows="3" placeholder="مثال: أرغب في R3 أو R5، مساحة من 140 إلى 160م²، أدوار متكررة (ثاني إلى خامس)، فيو بحري مفتوح، مجاورة محددة..." style="font-size: 0.85rem; line-height: 1.4;"></textarea>
+                    <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px;">
+                      <span class="tag-pill" onclick="appendNote('reg-desired-notes', 'مطلوب الحي R3')">➕ R3</span>
+                      <span class="tag-pill" onclick="appendNote('reg-desired-notes', 'مطلوب جاردن سيتي R5')">➕ R5</span>
+                      <span class="tag-pill" onclick="appendNote('reg-desired-notes', 'مساحة 140 - 160م²')">➕ 140-160م²</span>
+                      <span class="tag-pill" onclick="appendNote('reg-desired-notes', 'دور متكرر (2 - 5)')">➕ دور متكرر</span>
+                      <span class="tag-pill" onclick="appendNote('reg-desired-notes', 'فيو بحري مفتوح')">➕ بحري</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style="font-size: 0.84rem; font-weight: 800; color: #991b1b; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 4px;">
+                      <span>⛔</span>
+                      <span>المواصفات المرفوضة (ما لا أرغب به تماماً):</span>
+                    </label>
+                    <textarea id="reg-undesired-notes" class="form-control" rows="3" placeholder="مثال: أرفض الدور الأرضي، أرفض الدور الأخير، لا أرغب في مساحة أقل من 130م²، أرفض القرب من الخدمات..." style="font-size: 0.85rem; line-height: 1.4;"></textarea>
+                    <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px;">
+                      <span class="tag-pill tag-pill-danger" onclick="appendNote('reg-undesired-notes', 'أرفض الدور الأرضي')">⛔ أرفض الأرضي</span>
+                      <span class="tag-pill tag-pill-danger" onclick="appendNote('reg-undesired-notes', 'أرفض الدور الأخير')">⛔ أرفض الأخير</span>
+                      <span class="tag-pill tag-pill-danger" onclick="appendNote('reg-undesired-notes', 'أرفض مساحات أقل من 135م²')">⛔ أقل من 135م²</span>
+                      <span class="tag-pill tag-pill-danger" onclick="appendNote('reg-undesired-notes', 'لا أرغب في R5')">⛔ لا أرغب بـ R5</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+<div class="decision-choice-3" id="choice-status-agreed" onclick="setSwapStatus('AGREED_DIRECT')">
                 <input type="radio" name="swap-status-radio" value="AGREED_DIRECT" style="margin-top: 4px;">
                 <div>
                   <div style="font-weight: 800; color: #b45309; font-size: 0.95rem;">
@@ -361,7 +403,7 @@
             </p>
           </div>
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <input type="text" id="catalog-search" class="form-control" placeholder="بحث بالرقم العقاري، العمارة، الوحدة، النموذج..." style="width: 280px;" oninput="onCatalogSearch()">
+            <input type="text" id="catalog-search" class="form-control" placeholder="بحث بالعمارة، الوحدة، أو رغبة الموظف (متكرر، R3، 150م)..." style="width: 320px;" oninput="onCatalogSearch()">
           </div>
         </div>
 
