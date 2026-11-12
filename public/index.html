@@ -213,7 +213,26 @@
                   <span>تحديد مواصفات الشقة المرغوبة والمرفوضة (لتوليد الترشيحات الذكية وتسهيل التواصل الثنائي):</span>
                 </div>
                 <div style="font-size: 0.82rem; color: #15803d; margin-bottom: 0.85rem; line-height: 1.5;">
-                  اكتب رغباتك وموانعك بحرية أو استخدم الاختيارات السريعة بنقرة زر واحدة لإضافتها/إزالتها، وسيقوم المحرك الذكي باقتراح أفضل الشقق المتطابقة وفرص التوافق المزدوج فوراً.
+                  اكتب رغباتك وموانعك بحرية، أو استخدم <strong>الميكروفون للتحدث بصوتك</strong>، أو انقر على الاختيارات السريعة، وسيقوم المحرك باقتراح الشقق المتطابقة وفرص التوافق المزدوج فوراً.
+                </div>
+
+                <!-- Voice Assistant Banner -->
+                <div class="voice-assistant-bar">
+                  <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <span style="font-size: 1.6rem; line-height: 1;">🎙️</span>
+                    <div>
+                      <div style="font-weight: 800; color: #1e40af; font-size: 0.9rem;">
+                        المساعد الصوتي الذكي (اشرح شقتك المطلوبة بصوتك بالعامية المصرية):
+                      </div>
+                      <div style="font-size: 0.76rem; color: #475569; margin-top: 1px;">
+                        انقر المايك وتحدث بحرية (مثال: "عايز جاردن سيتي دور متكرر مساحة أكبر من 130 ومش عايز أرضي") وسيقوم النظام بتوزيعها وتوليد الترشيحات آلياً.
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-primary btn-sm" id="btn-master-voice" onclick="startMasterVoiceAssistant()" style="font-size: 0.82rem; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">
+                    <span id="master-mic-icon">🎙️</span>
+                    <span id="master-mic-text">تحدث للمساعد الصوتي</span>
+                  </button>
                 </div>
 
                 <!-- Hidden inputs for backward compatibility -->
@@ -233,7 +252,13 @@
                           <span>🎯</span>
                           <span>المواصفات المرغوبة (ما أبحث عنه):</span>
                         </label>
-                        <span style="font-size: 0.72rem; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 7px; border-radius: 10px; font-weight: 600;">⚡ نقرة للإضافة/الحذف</span>
+                        <div style="display: flex; gap: 0.35rem; align-items: center;">
+                          <button type="button" class="btn-voice-mic" id="mic-btn-desired" onclick="toggleVoiceInput('reg-desired-notes', 'mic-btn-desired')" title="تحدث بصوتك لإضافة رغباتك">
+                            <span>🎙️</span>
+                            <span>إملاء صوتي</span>
+                          </button>
+                          <span style="font-size: 0.72rem; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 7px; border-radius: 10px; font-weight: 600;">⚡ بنقرة زر</span>
+                        </div>
                       </div>
                       <textarea id="reg-desired-notes" class="form-control" rows="3" placeholder="اكتب بالتفصيل ما ترغب به في الشقة البديلة، أو انقر على الاختيارات السريعة بالأسفل..." style="font-size: 0.85rem; line-height: 1.45; border-color: #86efac;" oninput="onNotesInput()"></textarea>
                     </div>
@@ -265,7 +290,13 @@
                           <span>⛔</span>
                           <span>المواصفات المرفوضة (ما لا أرغب به تماماً):</span>
                         </label>
-                        <span style="font-size: 0.72rem; color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 2px 7px; border-radius: 10px; font-weight: 600;">🛑 موانع قطعية</span>
+                        <div style="display: flex; gap: 0.35rem; align-items: center;">
+                          <button type="button" class="btn-voice-mic btn-voice-mic-danger" id="mic-btn-undesired" onclick="toggleVoiceInput('reg-undesired-notes', 'mic-btn-undesired')" title="تحدث بصوتك لإضافة موانعك">
+                            <span>🎙️</span>
+                            <span>إملاء صوتي</span>
+                          </button>
+                          <span style="font-size: 0.72rem; color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 2px 7px; border-radius: 10px; font-weight: 600;">🛑 موانع قطعية</span>
+                        </div>
                       </div>
                       <textarea id="reg-undesired-notes" class="form-control" rows="3" placeholder="مثال: أرفض الدور الأرضي، أرفض الدور الأخير، لا أرغب في R5، مساحات أقل من 135م²..." style="font-size: 0.85rem; line-height: 1.45; border-color: #fca5a5;" oninput="onNotesInput()"></textarea>
                     </div>
@@ -446,6 +477,13 @@
         <div id="receipt-container" style="display: none; margin-top: 2rem;"></div>
 
         <!-- Smart Recommendations Section -->
+        <!-- Placeholder when user closes recommendations -->
+        <div id="recs-closed-placeholder" style="display: none; margin-top: 1.5rem; text-align: center;">
+          <button type="button" class="btn btn-outline" onclick="reopenRecommendationsSection()" style="background: white; border: 1.5px dashed #3b82f6; color: #1e40af; padding: 0.6rem 1.5rem; font-weight: 700; border-radius: 20px;">
+            🌟 إظهار ترشيحات المنظومة الذكية المخصصة لك
+          </button>
+        </div>
+
         <div id="smart-recommendations-section" style="display: none; margin-top: 2rem;">
           <div class="card" style="border: 2px solid #3b82f6; background: #fafcff;">
             <div class="card-header" style="border-bottom: 1.5px solid #bfdbfe; padding-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
@@ -462,7 +500,14 @@
                   تم توليد هذه الترشيحات آلياً بمطابقة شقتك ورغباتك مع شقق ومواصفات الزملاء الآخرين الراغبين بالتبادل (مع إبراز فرص التوافق المتبادل المزدوج).
                 </p>
               </div>
-              <button type="button" class="btn btn-outline btn-sm" onclick="refreshMyRecommendations()">🔄 تحديث الترشيحات</button>
+              <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="refreshMyRecommendations()" title="إعادة احتساب الترشيحات وفق المحددات الحالية">🔄 تحديث</button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-recs" onclick="toggleSmartRecommendations()" title="تصغير/توسيع بطاقات الترشيحات">
+                  <span id="toggle-recs-icon">👁️</span>
+                  <span id="toggle-recs-text">إخفاء الترشيحات</span>
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeRecommendationsSection()" title="إغلاق قسم الترشيحات بالكامل">✖ إغلاق</button>
+              </div>
             </div>
 
             <div id="smart-recommendations-grid" class="rec-grid" style="padding-top: 1.25rem;">

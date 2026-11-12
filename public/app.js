@@ -3221,3 +3221,309 @@ function refreshMyRecommendations() {
     showToast("يرجى إدخال الرقم القومي وتحديد شقتك الأصلية أولاً لعرض الترشيحات", "warning");
   }
 }
+
+
+// =========================================================
+// VOICE RECOGNITION & SMART DICTATION (WEB SPEECH API)
+// =========================================================
+let currentVoiceRecognition = null;
+let currentVoiceTargetId = null;
+let currentVoiceBtnId = null;
+
+function getSpeechRecognition() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) return null;
+  const rec = new SpeechRec();
+  rec.lang = 'ar-EG'; // Egyptian Arabic dialect
+  rec.continuous = false;
+  rec.interimResults = true;
+  return rec;
+}
+
+function toggleVoiceInput(targetTextareaId, btnId) {
+  if (currentVoiceRecognition) {
+    try { currentVoiceRecognition.stop(); } catch(e) {}
+    stopVoiceInputUI();
+    return;
+  }
+
+  const rec = getSpeechRecognition();
+  if (!rec) {
+    showToast("الميكروفون والتعرف الصوتي مدعوم عبر متصفحات Google Chrome أو Microsoft Edge", "warning");
+    return;
+  }
+
+  const btn = document.getElementById(btnId);
+  const textarea = document.getElementById(targetTextareaId);
+  if (!textarea) return;
+
+  currentVoiceRecognition = rec;
+  currentVoiceTargetId = targetTextareaId;
+  currentVoiceBtnId = btnId;
+
+  const initialVal = textarea.value.trim();
+
+  rec.onstart = () => {
+    if (btn) {
+      btn.classList.add('mic-listening');
+      btn.innerHTML = '<span>🔴</span> <span>جاري الاستماع...</span>';
+    }
+    showToast("🎙️ جاري الاستماع بصوتك... تحدث الآن باللغة العربية أو العامية", "info");
+  };
+
+  rec.onresult = (event) => {
+    let interim = '';
+    let finalTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interim += event.results[i][0].transcript;
+      }
+    }
+    const spoken = (finalTranscript || interim).trim();
+    if (spoken) {
+      textarea.value = initialVal ? initialVal + ' - ' + spoken : spoken;
+      onNotesInput();
+    }
+  };
+
+  rec.onerror = (e) => {
+    console.warn("Speech recognition error:", e);
+    if (e.error === 'not-allowed') {
+      showToast("يرجى إعطاء صلاحية استخدام الميكروفون في المتصفح 🎙️", "error");
+    } else if (e.error !== 'no-speech') {
+      showToast("تعذر التقاط الصوت، يرجى المحاولة مرة أخرى", "warning");
+    }
+    stopVoiceInputUI();
+  };
+
+  rec.onend = () => {
+    stopVoiceInputUI();
+    showToast("تم تحويل صوتك لنص بنجاح ✔️", "success");
+    onNotesInput();
+  };
+
+  try {
+    rec.start();
+  } catch(err) {
+    console.error("Failed to start voice recognition:", err);
+    stopVoiceInputUI();
+  }
+}
+
+function stopVoiceInputUI() {
+  if (currentVoiceBtnId) {
+    const btn = document.getElementById(currentVoiceBtnId);
+    if (btn) {
+      btn.classList.remove('mic-listening');
+      if (currentVoiceBtnId === 'mic-btn-desired' || currentVoiceBtnId === 'mic-btn-undesired') {
+        btn.innerHTML = '<span>🎙️</span> <span>إملاء صوتي</span>';
+      } else if (currentVoiceBtnId === 'btn-master-voice') {
+        btn.innerHTML = '<span id="master-mic-icon">🎙️</span> <span id="master-mic-text">تحدث للمساعد الصوتي</span>';
+      }
+    }
+  }
+  currentVoiceRecognition = null;
+  currentVoiceTargetId = null;
+  currentVoiceBtnId = null;
+}
+
+function startMasterVoiceAssistant() {
+  if (currentVoiceRecognition) {
+    try { currentVoiceRecognition.stop(); } catch(e) {}
+    resetMasterVoiceBtn();
+    return;
+  }
+
+  const rec = getSpeechRecognition();
+  if (!rec) {
+    showToast("المساعد الصوتي مدعوم عبر متصفحات Google Chrome أو Microsoft Edge", "warning");
+    return;
+  }
+
+  const masterBtn = document.getElementById("btn-master-voice");
+  currentVoiceRecognition = rec;
+  currentVoiceBtnId = "btn-master-voice";
+
+  rec.onstart = () => {
+    if (masterBtn) {
+      masterBtn.classList.add('btn-danger');
+      masterBtn.classList.remove('btn-primary');
+      masterBtn.innerHTML = '<span>🔴</span> <span>جاري الاستماع... (انقر للإيقاف)</span>';
+    }
+    showToast("🎙️ المساعد الصوتي يستمع إليك الآن... اشرح مواصفات وموانع شقتك بحرية بالعامية المصرية!", "info");
+  };
+
+  rec.onresult = (event) => {
+    let finalTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      }
+    }
+    if (finalTranscript) {
+      parseAndDistributeVoice(finalTranscript);
+    }
+  };
+
+  rec.onerror = (e) => {
+    console.warn("Master voice assistant error:", e);
+    if (e.error === 'not-allowed') {
+      showToast("يرجى إعطاء صلاحية استخدام الميكروفون في المتصفح 🎙️", "error");
+    }
+    resetMasterVoiceBtn();
+  };
+
+  rec.onend = () => {
+    resetMasterVoiceBtn();
+  };
+
+  try {
+    rec.start();
+  } catch(err) {
+    console.error("Voice assistant start error:", err);
+    resetMasterVoiceBtn();
+  }
+}
+
+function resetMasterVoiceBtn() {
+  const masterBtn = document.getElementById("btn-master-voice");
+  if (masterBtn) {
+    masterBtn.classList.remove('btn-danger');
+    masterBtn.classList.add('btn-primary');
+    masterBtn.innerHTML = '<span id="master-mic-icon">🎙️</span> <span id="master-mic-text">تحدث للمساعد الصوتي</span>';
+  }
+  currentVoiceRecognition = null;
+}
+
+function parseAndDistributeVoice(speechText) {
+  const desiredEl = document.getElementById("reg-desired-notes");
+  const undesiredEl = document.getElementById("reg-undesired-notes");
+  if (!desiredEl || !undesiredEl) return;
+
+  const text = speechText.trim();
+  const desiredParts = [];
+  const undesiredParts = [];
+
+  // District
+  if (text.includes('جاردن سيتي') || text.includes('جاردينيا') || text.includes('r5') || text.includes('الخامس')) {
+    if (text.match(/(?:مش\s*عايز|أرفض|بلاش|لا\s*أرغب|بدون)\s+(?:في\s+)?(?:جاردن سيتي|جاردينيا|r5|الخامس)/i)) {
+      undesiredParts.push('لا أرغب في R5');
+    } else {
+      desiredParts.push('مطلوب جاردن سيتي R5');
+    }
+  }
+  if (text.includes('r3') || text.includes('الثالث')) {
+    if (text.match(/(?:مش\s*عايز|أرفض|بلاش|لا\s*أرغب|بدون)\s+(?:في\s+)?(?:r3|الثالث)/i)) {
+      undesiredParts.push('لا أرغب في R3');
+    } else {
+      desiredParts.push('مطلوب الحي R3');
+    }
+  }
+
+  // Floors
+  if (text.includes('متكرر') || text.includes('ثاني') || text.includes('ثالث') || text.includes('رابع') || text.includes('خامس')) {
+    desiredParts.push('دور متكرر (2 - 5)');
+  }
+  if (text.includes('أرضي') || text.includes('ارضي')) {
+    if (text.match(/(?:مش\s*عايز|أرفض|بلاش|لا\s*أرغب|بدون|ولا)\s+(?:دور\s+)?أ?رضي/i) || text.includes('مرفوض الأرضي')) {
+      undesiredParts.push('أرفض الدور الأرضي');
+    } else {
+      desiredParts.push('دور أرضي');
+    }
+  }
+  if (text.includes('أخير') || text.includes('اخير')) {
+    if (text.match(/(?:مش\s*عايز|أرفض|بلاش|لا\s*أرغب|بدون|ولا)\s+(?:دور\s+)?أ?خير/i) || text.includes('مرفوض الأخير')) {
+      undesiredParts.push('أرفض الدور الأخير');
+    } else {
+      desiredParts.push('دور أخير');
+    }
+  }
+
+  // Area
+  if (text.includes('أكبر من شقتي') || text.includes('اكبر من شقتي')) {
+    desiredParts.push('مساحة أكبر من شقتي');
+  } else if (text.includes('متقاربة') || text.includes('نفس المساحة')) {
+    desiredParts.push('مساحة متقاربة لمساحتي');
+  }
+
+  if (text.match(/(?:أقل|اقل)\s+من\s+مساحتي/i)) {
+    undesiredParts.push('مساحات أقل من مساحتي');
+  }
+
+  // Ranges
+  const rangeMatch = text.match(/(?:ما\s*بين|بين|من)\s*(\d{2,3})\s*(?:و|حتى|إلى|الى|لـ?)\s*(\d{2,3})/i) ||
+                     text.match(/(\d{2,3})\s*[-–—]\s*(\d{2,3})/);
+  if (rangeMatch) {
+    const n1 = parseInt(rangeMatch[1], 10);
+    const n2 = parseInt(rangeMatch[2], 10);
+    if (n1 >= 50 && n2 >= 50) {
+      desiredParts.push(`مساحة ${Math.min(n1, n2)} - ${Math.max(n1, n2)}م²`);
+    }
+  }
+
+  const rejectUnder = text.match(/(?:مش\s*عايز|أرفض|بلاش|لا\s*أرغب|بدون)\s+(?:مساحات\s+)?(?:أقل|اقل)\s+من\s+(\d{2,3})/i);
+  if (rejectUnder && parseInt(rejectUnder[1], 10) >= 50) {
+    undesiredParts.push(`مساحات أقل من ${rejectUnder[1]}م²`);
+  }
+
+  // View
+  if (text.includes('بحري') || text.includes('فيو مفتوح') || text.includes('فيو بحري')) {
+    desiredParts.push('فيو بحري مفتوح');
+  }
+
+  if (desiredParts.length > 0) {
+    desiredEl.value = desiredParts.join(' - ');
+  } else if (text) {
+    desiredEl.value = text;
+  }
+
+  if (undesiredParts.length > 0) {
+    undesiredEl.value = undesiredParts.join(' - ');
+  }
+
+  onNotesInput();
+  showToast(`🎉 فهم المساعد الصوتي رغباتك ووزعها بالبطاقتين وجاري تحديث الترشيحات!`, "success");
+}
+
+// =========================================================
+// SMART RECOMMENDATIONS SHOW / HIDE / CLOSE CONTROLS
+// =========================================================
+function toggleSmartRecommendations() {
+  const grid = document.getElementById("smart-recommendations-grid");
+  const icon = document.getElementById("toggle-recs-icon");
+  const text = document.getElementById("toggle-recs-text");
+  
+  if (!grid) return;
+  
+  if (grid.style.display === "none") {
+    grid.style.display = "grid";
+    if (icon) icon.textContent = "👁️";
+    if (text) text.textContent = "إخفاء الترشيحات";
+    showToast("تم إظهار بطاقات الترشيحات الذكية", "info");
+  } else {
+    grid.style.display = "none";
+    if (icon) icon.textContent = "👁️‍🗨️";
+    if (text) text.textContent = "إظهار الترشيحات";
+    showToast("تم تصغير وإخفاء بطاقات الترشيحات لتوفير المساحة", "info");
+  }
+}
+
+function closeRecommendationsSection() {
+  const section = document.getElementById("smart-recommendations-section");
+  const placeholder = document.getElementById("recs-closed-placeholder");
+  if (section) section.style.display = "none";
+  if (placeholder) placeholder.style.display = "block";
+  showToast("تم إغلاق قسم الترشيحات (يمكنك إعادة إظهاره في أي وقت من الزر)", "info");
+}
+
+function reopenRecommendationsSection() {
+  const section = document.getElementById("smart-recommendations-section");
+  const grid = document.getElementById("smart-recommendations-grid");
+  const placeholder = document.getElementById("recs-closed-placeholder");
+  if (placeholder) placeholder.style.display = "none";
+  if (section) section.style.display = "block";
+  if (grid) grid.style.display = "grid";
+  showToast("تم فتح قسم الترشيحات الذكية بنجاح 🌟", "success");
+}
