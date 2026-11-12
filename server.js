@@ -301,7 +301,73 @@ const server = http.createServer(async (req, res) => {
       `).get(latestRun.id, nid);
 
       if (!result) {
-        return sendJson(res, 404, { success: false, message: "لم تسجل بيانات مشاركة في هذه القرعة" });
+        // The user is registered in the platform, but registered after the last published run
+        // or hasn't participated in an automated matching cycle yet.
+        const origApt = user.original_apartment_id ? db.getApartmentById(user.original_apartment_id) : null;
+        if (!origApt) {
+          return sendJson(res, 404, { success: false, message: "بيانات الشقة الأصلية غير مسجلة" });
+        }
+
+        const isWantsSwap = user.swap_status === 'WANTS_SWAP';
+        const fallbackResult = {
+          id: user.id,
+          user_id: user.id,
+          full_name: user.full_name,
+          national_id: user.national_id,
+          phone: user.phone,
+          workplace: user.workplace,
+          lottery_rank: user.lottery_rank,
+          random_priority_number: user.random_priority_number,
+          swap_type: 'KEPT_ORIGINAL',
+          rank_achieved: 0,
+          cycle_id: null,
+          original_apartment_id: origApt.id,
+          assigned_apartment_id: origApt.id,
+
+          orig_code: origApt.code,
+          orig_district: origApt.district,
+          orig_neighborhood: origApt.neighborhood,
+          orig_building: origApt.building,
+          orig_bld: origApt.building,
+          orig_floor: origApt.floor,
+          orig_floor_label: origApt.floor_label,
+          orig_fl_label: origApt.floor_label,
+          orig_unit: origApt.unit_number,
+          orig_model: origApt.model,
+          orig_area: origApt.area,
+          orig_price: origApt.meter_price,
+          orig_total_price: origApt.total_price,
+          orig_nat_id: origApt.national_property_id,
+
+          assign_code: origApt.code,
+          assign_district: origApt.district,
+          assign_neighborhood: origApt.neighborhood,
+          assign_building: origApt.building,
+          assign_bld: origApt.building,
+          assign_floor: origApt.floor,
+          assign_floor_label: origApt.floor_label,
+          assign_fl_label: origApt.floor_label,
+          assign_unit: origApt.unit_number,
+          assign_model: origApt.model,
+          assign_area: origApt.area,
+          assign_price: origApt.meter_price,
+          assign_total_price: origApt.total_price,
+          assign_nat_id: origApt.national_property_id,
+
+          isLiveRegistrationOnly: true,
+          statusNotice: isWantsSwap
+            ? "بياناتك وشقتك مسجلة بنجاح بالمنظومة ومعروضة بكتالوج التبادل (1-to-1). النتائج المنشورة حالياً تخص تشغيلة سابقة تمت قبل تسجيلك، وشقتك محفوظة لك بنسبة 100% وسيتم إدراجك تلقائياً في دورة التوفيق القادمة عند اعتمادها من لجنة التبديل."
+            : "بياناتك وشقتك مسجلة بنجاح بالمنظومة، وموقفك الحالي: محتفظ بشقتك الأصلية بنسبة 100% دون أي مساس بها.",
+          cycleMembers: [],
+          receivingFrom: null,
+          givingTo: null
+        };
+
+        return sendJson(res, 200, {
+          success: true,
+          published: true,
+          result: fallbackResult
+        });
       }
 
       // If swapped, fetch all members of the cycle with contact numbers for Ministry coordination

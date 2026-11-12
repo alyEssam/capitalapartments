@@ -1392,12 +1392,12 @@ async function queryResult() {
           </div>
         </div>
 
-        <div style="background: ${isSwapped ? '#f0fdf4' : '#fffbeb'}; border: 1px solid ${isSwapped ? '#bbf7d0' : '#fef08a'}; padding: 1rem; border-radius: 8px; margin-bottom: 1.25rem;">
-          <div style="font-size: 1.15rem; font-weight: 800; color: ${isSwapped ? '#166534' : '#854d0e'};">
-            ${isSwapped ? `🎉 تم التوفيق بنجاح وحصلت على (الرغبة #${r.rank_achieved})!` : '🛡️ تم الحفاظ على شقتك الأصلية 100%'}
+        <div style="background: ${isSwapped ? '#f0fdf4' : (r.isLiveRegistrationOnly ? '#eff6ff' : '#fffbeb')}; border: 1px solid ${isSwapped ? '#bbf7d0' : (r.isLiveRegistrationOnly ? '#bfdbfe' : '#fef08a')}; padding: 1rem; border-radius: 8px; margin-bottom: 1.25rem;">
+          <div style="font-size: 1.15rem; font-weight: 800; color: ${isSwapped ? '#166534' : (r.isLiveRegistrationOnly ? '#1e40af' : '#854d0e')};">
+            ${isSwapped ? `🎉 تم التوفيق بنجاح وحصلت على (الرغبة #${r.rank_achieved})!` : (r.isLiveRegistrationOnly ? '🛡️ شقتك مسجلة بنجاح بالمنظومة ومحفوظة لك 100%' : '🛡️ تم الحفاظ على شقتك الأصلية 100%')}
           </div>
-          <div style="font-size: 0.85rem; color: ${isSwapped ? '#15803d' : '#a16207'}; margin-top: 0.25rem;">
-            ${isSwapped ? `نوع التبادل: ${r.swap_type === 'DIRECT_PAIR' ? 'تبادل ثنائي مباشر' : 'دورة تبادلية متعددة الأطراف'}` : 'لم تتوفر دورة تبادل تحقق رغباتك المسجلة، وبموجب النظام تحتفظ بشقتك كاملة دون أي مساس بها.'}
+          <div style="font-size: 0.88rem; color: ${isSwapped ? '#15803d' : (r.isLiveRegistrationOnly ? '#1e3a8a' : '#a16207')}; margin-top: 0.35rem; line-height: 1.5;">
+            ${r.statusNotice ? r.statusNotice : (isSwapped ? `نوع التبادل: ${r.swap_type === 'DIRECT_PAIR' ? 'تبادل ثنائي مباشر' : 'دورة تبادلية متعددة الأطراف'}` : 'لم تتوفر دورة تبادل تحقق رغباتك المسجلة، وبموجب النظام تحتفظ بشقتك كاملة دون أي مساس بها.')}
           </div>
         </div>
 
