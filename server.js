@@ -125,6 +125,16 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { success: true, user });
     }
 
+    // 4b. Smart Recommendations for User
+    if (pathname.startsWith("/api/recommendations/") && method === "GET") {
+      const q = pathname.replace("/api/recommendations/", "").trim();
+      if (!q) {
+        return sendJson(res, 400, { success: false, message: "يرجى تحديد الرقم القومي للموظف" });
+      }
+      const recs = db.getSmartRecommendations(q);
+      return sendJson(res, 200, recs);
+    }
+
     // 5. Check Swap Result for public user
     if (pathname.startsWith("/api/result/") && method === "GET") {
       const nid = pathname.replace("/api/result/", "").trim();

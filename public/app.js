@@ -906,6 +906,12 @@ async function handleRegistrationSubmit(e) {
     swapUndesiredNotes: document.getElementById("reg-undesired-notes") ? document.getElementById("reg-undesired-notes").value.trim() : "",
     directPartnerNid: (state.swapStatus === 'AGREED_DIRECT' && document.getElementById("reg-partner-query")) ? document.getElementById("reg-partner-query").value.trim() : "",
     directSwapNotes: (state.swapStatus === 'AGREED_DIRECT' && document.getElementById("reg-partner-notes")) ? document.getElementById("reg-partner-notes").value.trim() : "",
+    targetDistrict: document.getElementById("filter-target-district") ? document.getElementById("filter-target-district").value : "ANY",
+    targetFloor: document.getElementById("filter-target-floor") ? document.getElementById("filter-target-floor").value : "ANY",
+    targetArea: document.getElementById("filter-target-area") ? document.getElementById("filter-target-area").value : "ANY",
+    rejectGround: document.getElementById("filter-reject-ground") && document.getElementById("filter-reject-ground").checked ? 1 : 0,
+    rejectLast: document.getElementById("filter-reject-last") && document.getElementById("filter-reject-last").checked ? 1 : 0,
+    rejectDistrict: document.getElementById("filter-reject-district") ? document.getElementById("filter-reject-district").value : "NONE",
     preferences: (state.systemPhase === 'PHASE_2_PREFERENCES' && state.swapStatus === 'WANTS_SWAP') ? state.preferences.map(p => p.id) : []
   };
 
@@ -927,6 +933,12 @@ async function handleRegistrationSubmit(e) {
       renderReceipt(data.user);
       loadStats();
       loadApartments();
+      if (data.user.swap_status === 'WANTS_SWAP') {
+        loadSmartRecommendations(data.user.national_id);
+      } else {
+        const recSection = document.getElementById("smart-recommendations-section");
+        if (recSection) recSection.style.display = "none";
+      }
     } else {
       showToast(data.message || "فشل حفظ البيانات", "error");
     }
@@ -1799,6 +1811,24 @@ async function lookupExistingUserPreferences(silent = false) {
     const undesInput = document.getElementById("reg-undesired-notes");
     if (desInput) desInput.value = u.swap_desired_notes || "";
     if (undesInput) undesInput.value = u.swap_undesired_notes || "";
+
+    // Restore Smart Filters pills & checkboxes
+    selectPrefPill('target-district', u.target_district || 'ANY', false);
+    selectPrefPill('target-floor', u.target_floor || 'ANY', false);
+    selectPrefPill('target-area', u.target_area || 'ANY', false);
+    const rejG = document.getElementById("filter-reject-ground");
+    const rejL = document.getElementById("filter-reject-last");
+    const rejD = document.getElementById("filter-reject-district");
+    if (rejG) rejG.checked = u.reject_ground === 1;
+    if (rejL) rejL.checked = u.reject_last === 1;
+    if (rejD) rejD.value = u.reject_district || 'NONE';
+
+    if (st === 'WANTS_SWAP') {
+      loadSmartRecommendations(u.national_id);
+    } else {
+      const recSection = document.getElementById("smart-recommendations-section");
+      if (recSection) recSection.style.display = "none";
+    }
     if (st === 'AGREED_DIRECT') {
       const qInput = document.getElementById("reg-partner-query");
       const notesInput = document.getElementById("reg-partner-notes");
@@ -2879,5 +2909,255 @@ function dismissCondolence() {
         localStorage.setItem("condolence_magda_dismissed", "true");
       } catch(e) {}
     }, 300);
+  }
+}
+
+
+// =========================================================
+// SMART RECOMMENDATIONS & MUTUAL MATCHING FRONTEND ENGINE
+// =========================================================
+
+function selectPrefPill(groupName, value, triggerRefresh = true) {
+  const hiddenInput = document.getElementById(`filter-${groupName}`);
+  if (hiddenInput) hiddenInput.value = value;
+
+  const groupEl = document.getElementById(`group-${groupName}`);
+  if (groupEl) {
+    groupEl.querySelectorAll('.btn-pill').forEach(btn => {
+      if (btn.getAttribute('data-val') === value) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  if (triggerRefresh && state.selectedAptId) {
+    refreshMyRecommendations();
+  }
+}
+
+function onDealbreakerChanged() {
+  if (state.selectedAptId) {
+    refreshMyRecommendations();
+  }
+}
+
+async function loadSmartRecommendations(nid) {
+  if (!nid) return;
+  const section = document.getElementById("smart-recommendations-section");
+  const grid = document.getElementById("smart-recommendations-grid");
+  const mutualBadge = document.getElementById("rec-mutual-badge");
+  const totalBadge = document.getElementById("rec-total-badge");
+
+  if (!section || !grid) return;
+
+  grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #1e40af;">
+    <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🤖 ⏳</div>
+    <strong>جاري فحص وتوليد أفضل الترشيحات الذكية وفرص التوافق المزدوج...</strong>
+  </div>`;
+  section.style.display = "block";
+
+  try {
+    const res = await fetch(`/api/recommendations/${nid}`);
+    const data = await res.json();
+
+    if (!data.success || !data.recommendations || data.recommendations.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column: 1/-1; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 10px; padding: 2rem; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 0.4rem;">🔍</div>
+          <div style="font-weight: 800; color: #1e3a8a; font-size: 1.05rem;">لم يتم العثور على شقق تطابق تماماً شروطك المحددة حالياً</div>
+          <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.35rem; max-width: 550px; margin: 0.35rem auto 0;">
+            جرب تخفيف بعض الشروط المانعة (مثل السماح بأي دور أو أي مساحة) لتوسيع خيارات الترشيح، وسيقوم النظام بتنبيهك تلقائياً فور تسجيل أي زميل لشقة تطابق مواصفاتك.
+          </div>
+        </div>
+      `;
+      if (mutualBadge) mutualBadge.style.display = "none";
+      if (totalBadge) totalBadge.style.display = "none";
+      updateCatalogFilterBadges([], []);
+      return;
+    }
+
+    state.smartRecommendations = data.recommendations;
+    state.mutualMatches = data.recommendations.filter(r => r.isMutualMatch);
+
+    // Update badges in header
+    if (data.mutualCount > 0) {
+      if (mutualBadge) {
+        mutualBadge.style.display = "inline-flex";
+        mutualBadge.innerHTML = `🎉 <strong>${data.mutualCount}</strong> فرص توافق مزدوج (متبادل)!`;
+      }
+    } else {
+      if (mutualBadge) mutualBadge.style.display = "none";
+    }
+
+    if (totalBadge) {
+      totalBadge.style.display = "inline-flex";
+      totalBadge.textContent = `${data.totalRecommendations} شقة مرشحة متطابقة`;
+    }
+
+    updateCatalogFilterBadges(state.smartRecommendations, state.mutualMatches);
+    renderSmartRecommendationsGrid(data.recommendations);
+
+  } catch(e) {
+    console.error("Error loading smart recommendations:", e);
+    grid.innerHTML = `<div style="grid-column: 1/-1; color: #b91c1c; text-align: center; padding: 1.5rem;">فشل جلب الترشيحات الذكية حالياً.</div>`;
+  }
+}
+
+function updateCatalogFilterBadges(recs, mutuals) {
+  const btnMutual = document.getElementById("btn-cat-mutual");
+  const btnRec = document.getElementById("btn-cat-rec");
+  const countAll = document.getElementById("cat-count-all");
+  const countMutual = document.getElementById("cat-count-mutual");
+  const countRec = document.getElementById("cat-count-rec");
+
+  const totalSwappable = state.apartments.filter(a => a.owner_name && a.owner_swap_status === 'WANTS_SWAP').length;
+  if (countAll) countAll.textContent = totalSwappable.toLocaleString('ar-EG');
+
+  if (mutuals && mutuals.length > 0) {
+    if (btnMutual) btnMutual.style.display = "inline-block";
+    if (countMutual) countMutual.textContent = mutuals.length.toLocaleString('ar-EG');
+  } else {
+    if (btnMutual) btnMutual.style.display = "none";
+  }
+
+  if (recs && recs.length > 0) {
+    if (btnRec) btnRec.style.display = "inline-block";
+    if (countRec) countRec.textContent = recs.length.toLocaleString('ar-EG');
+  } else {
+    if (btnRec) btnRec.style.display = "none";
+  }
+}
+
+function setCatalogSmartFilter(filterType) {
+  state.catalogSmartFilter = filterType;
+  document.querySelectorAll('.btn-cat-filter').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.getElementById(filterType === 'all' ? 'btn-cat-all' : (filterType === 'mutual' ? 'btn-cat-mutual' : 'btn-cat-rec'));
+  if (activeBtn) activeBtn.classList.add('active');
+
+  state.catalogPage = 1;
+  renderCatalog();
+}
+
+function renderSmartRecommendationsGrid(recs) {
+  const grid = document.getElementById("smart-recommendations-grid");
+  if (!grid) return;
+
+  grid.innerHTML = recs.map((r, idx) => {
+    const apt = r.apartment;
+    const isMutual = r.isMutualMatch;
+    const distBadge = apt.district === 'R3' ? '<span class="badge-r3">الحي R3</span>' : '<span class="badge-r5">جاردن سيتي R5</span>';
+
+    return `
+      <div class="rec-card ${isMutual ? 'mutual-match' : ''}">
+        <div>
+          <!-- Top Row: Badge & Code -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.4rem;">
+            ${isMutual ? `
+              <span class="badge-rec-mutual">
+                <span>🤝</span>
+                <strong>توافق مزدوج متبادل (${r.matchScore}%)</strong>
+              </span>
+            ` : `
+              <span class="badge-rec-regular">
+                <span>⭐</span>
+                <strong>مطابقة لرغباتك (${r.matchScore}%)</strong>
+              </span>
+            `}
+            <span style="font-size: 0.72rem; color: #64748b; font-family: monospace; font-weight: 700;">
+              ${apt.district}-${apt.neighborhood}-ع${apt.building}-و${apt.unit_number}
+            </span>
+          </div>
+
+          <!-- Unit details -->
+          <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-bottom: 0.25rem;">
+            ${distBadge} مجاورة ${apt.neighborhood} - مبنى ${apt.building} - وحدة ${apt.unit_number}
+          </div>
+          <div style="font-size: 0.85rem; color: #475569; margin-bottom: 0.4rem;">
+            ${apt.floor_label} | نموذج ${apt.model} (${apt.area}م²) | ${(apt.meter_price || 0).toLocaleString('ar-EG')} ج/م²
+          </div>
+
+          <!-- Reasons match tags -->
+          <div class="rec-reasons-list">
+            ${(r.reasonsForMe || []).map(reason => `<span class="rec-reason-tag">✔ ${reason}</span>`).join('')}
+            ${isMutual ? `
+              <span class="rec-reason-tag mutual">
+                🎯 <strong>الطرف الآخر يرغب بشقتك أيضاً!</strong>
+              </span>
+            ` : ''}
+          </div>
+
+          <!-- Owner box -->
+          <div style="background: ${isMutual ? '#f0fdf4' : '#f8fafc'}; border: 1px solid ${isMutual ? '#bbf7d0' : '#e2e8f0'}; border-radius: 8px; padding: 0.6rem 0.75rem; margin: 0.6rem 0; font-size: 0.8rem;">
+            <div style="font-weight: 800; color: #1e3a8a; display: flex; justify-content: space-between; align-items: center;">
+              <span>👤 ${r.candidateName}</span>
+              <span style="font-size: 0.72rem; color: #475569;">🏛️ ${r.candidateWorkplace || 'غير محدد'}</span>
+            </div>
+            ${r.candidateDesiredNotes ? `
+              <div style="color: #15803d; font-size: 0.75rem; margin-top: 3px; font-weight: 700;">
+                🎯 رغبته: ${escapeHtml(r.candidateDesiredNotes)}
+              </div>
+            ` : ''}
+            ${r.candidateUndesiredNotes ? `
+              <div style="color: #b91c1c; font-size: 0.72rem; margin-top: 2px;">
+                ⛔ يرفض: ${escapeHtml(r.candidateUndesiredNotes)}
+              </div>
+            ` : ''}
+            <div style="font-size: 0.7rem; color: #94a3b8; font-family: monospace; margin-top: 3px;">
+              الرقم العقاري: ${apt.national_property_id || ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.6rem; border-top: 1px solid #f1f5f9; padding-top: 0.75rem;">
+          <a href="${r.whatsappUrl}" target="_blank" class="btn-whatsapp" style="flex: 1; text-align: center; text-decoration: none; padding: 6px 10px; font-size: 0.8rem;">
+            💬 واتساب مباشر
+          </a>
+          <a href="tel:${r.candidatePhone}" class="btn-call" style="padding: 6px 10px; font-size: 0.8rem;">
+            📞 اتصال
+          </a>
+          <button type="button" class="btn btn-outline btn-sm" onclick="addPreferenceFromRec(${apt.id})" title="إضافة لقائمة الرغبات بالقرعة">
+            ➕ رغبة
+          </button>
+          <button type="button" class="btn btn-gold btn-sm" onclick="requestDirectSwapFromRec('${r.candidateNid}', '${r.candidateName}')" title="بدء توافق ودي مباشر مع هذا الزميل">
+            🤝 توافق
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function addPreferenceFromRec(aptId) {
+  addPreference(aptId);
+  showToast("تمت إضافة الشقة المرشحة لقائمة رغباتك بنجاح ⭐", "success");
+}
+
+function requestDirectSwapFromRec(candNid, candName) {
+  setSwapStatus('AGREED_DIRECT');
+  const qInput = document.getElementById("reg-partner-query");
+  const notesInput = document.getElementById("reg-partner-notes");
+  if (qInput) {
+    qInput.value = candNid;
+    onPartnerQueryInput();
+  }
+  if (notesInput) {
+    notesInput.value = "توافق ثنائي عبر ترشيحات المنظومة الذكية";
+  }
+  showToast(`تم اختيار الزميل (${candName}) للتوافق الودي المباشر! راجع التفاصيل ثم اضغط حفظ لتأكيد التبادل.`, "info");
+  const partnerBox = document.getElementById("direct-partner-container");
+  if (partnerBox) partnerBox.scrollIntoView({ behavior: "smooth" });
+}
+
+function refreshMyRecommendations() {
+  const nidInput = document.getElementById("reg-nid");
+  const nid = nidInput ? nidInput.value.trim() : (state.currentUser ? state.currentUser.national_id : "");
+  if (nid && nid.length === 14) {
+    loadSmartRecommendations(nid);
+    showToast("جاري تحديث الترشيحات الذكية وفق محدداتك الجديدة... 🔄", "info");
+  } else {
+    showToast("يرجى إدخال الرقم القومي وتحديد شقتك الأصلية أولاً لعرض الترشيحات", "warning");
   }
 }

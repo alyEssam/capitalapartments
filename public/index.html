@@ -216,6 +216,74 @@
                   اكتب هنا ما ترغب به وما ترفضه في الشقة البديلة، لتسهيل تواصل الزملاء معك للتبادل المباشر (One-to-One) أو التوافق الودي.
                 </div>
 
+                <!-- Smart Filter Pills for Targeted Matching -->
+                <div style="background: white; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+                  <div style="font-weight: 800; color: #166534; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
+                    <span>⚡</span>
+                    <span>تحديد رغباتك الأساسية بنقرة زر (لتوليد الترشيحات الذكية والتوافق المتبادل):</span>
+                  </div>
+                  <div style="font-size: 0.8rem; color: #15803d; margin-bottom: 0.85rem;">
+                    اختر مواصفات الشقة التي ترغب بالانتقال إليها وموانعك المطلقة، ليقوم المحرك الذكي باقتراح أفضل الشقق المتطابقة وإبراز فرص التوافق المزدوج فوراً:
+                  </div>
+
+                  <div class="grid-2" style="gap: 0.85rem; margin-bottom: 0.5rem;">
+                    <!-- Target District -->
+                    <div>
+                      <label style="font-size: 0.8rem; font-weight: 700; color: #1e3a8a; margin-bottom: 4px; display: block;">📍 الحي المفضل:</label>
+                      <div class="pill-selector-group" id="group-target-district">
+                        <button type="button" class="btn-pill active" data-val="ANY" onclick="selectPrefPill('target-district', 'ANY')">الكل (R3 أو R5)</button>
+                        <button type="button" class="btn-pill" data-val="R3" onclick="selectPrefPill('target-district', 'R3')">الحي الثالث (R3)</button>
+                        <button type="button" class="btn-pill" data-val="R5" onclick="selectPrefPill('target-district', 'R5')">جاردن سيتي (R5)</button>
+                      </div>
+                      <input type="hidden" id="filter-target-district" value="ANY">
+                    </div>
+
+                    <!-- Target Floor -->
+                    <div>
+                      <label style="font-size: 0.8rem; font-weight: 700; color: #1e3a8a; margin-bottom: 4px; display: block;">🏢 الدور المرغوب:</label>
+                      <div class="pill-selector-group" id="group-target-floor">
+                        <button type="button" class="btn-pill active" data-val="ANY" onclick="selectPrefPill('target-floor', 'ANY')">أي دور</button>
+                        <button type="button" class="btn-pill" data-val="REPEATED" onclick="selectPrefPill('target-floor', 'REPEATED')">متكرر (2 - 5)</button>
+                        <button type="button" class="btn-pill" data-val="GROUND" onclick="selectPrefPill('target-floor', 'GROUND')">دور أرضي</button>
+                        <button type="button" class="btn-pill" data-val="LAST" onclick="selectPrefPill('target-floor', 'LAST')">دور أخير (6)</button>
+                      </div>
+                      <input type="hidden" id="filter-target-floor" value="ANY">
+                    </div>
+
+                    <!-- Target Area -->
+                    <div>
+                      <label style="font-size: 0.8rem; font-weight: 700; color: #1e3a8a; margin-bottom: 4px; display: block;">📐 المساحة المطلوبة:</label>
+                      <div class="pill-selector-group" id="group-target-area">
+                        <button type="button" class="btn-pill active" data-val="ANY" onclick="selectPrefPill('target-area', 'ANY')">أي مساحة</button>
+                        <button type="button" class="btn-pill" data-val="LARGER" onclick="selectPrefPill('target-area', 'LARGER')">أكبر من مساحتي</button>
+                        <button type="button" class="btn-pill" data-val="SIMILAR" onclick="selectPrefPill('target-area', 'SIMILAR')">متقاربة (±10م²)</button>
+                        <button type="button" class="btn-pill" data-val="SMALLER" onclick="selectPrefPill('target-area', 'SMALLER')">أصغر من مساحتي</button>
+                      </div>
+                      <input type="hidden" id="filter-target-area" value="ANY">
+                    </div>
+
+                    <!-- Dealbreakers -->
+                    <div>
+                      <label style="font-size: 0.8rem; font-weight: 700; color: #991b1b; margin-bottom: 4px; display: block;">⛔ شروط مانعة (مرفوض تماماً):</label>
+                      <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-top: 4px;">
+                        <label class="dealbreaker-checkbox">
+                          <input type="checkbox" id="filter-reject-ground" onchange="onDealbreakerChanged()">
+                          <span>أرفض الأرضي</span>
+                        </label>
+                        <label class="dealbreaker-checkbox">
+                          <input type="checkbox" id="filter-reject-last" onchange="onDealbreakerChanged()">
+                          <span>أرفض الأخير</span>
+                        </label>
+                        <select id="filter-reject-district" class="form-select form-select-sm" style="font-size: 0.78rem; padding: 2px 8px; width: auto; height: 30px;" onchange="onDealbreakerChanged()">
+                          <option value="NONE">لا أرفض حياً معيناً</option>
+                          <option value="R3">أرفض الحي R3</option>
+                          <option value="R5">أرفض الحي R5</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="grid-2" style="gap: 1rem;">
                   <div>
                     <label style="font-size: 0.84rem; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 4px;">
@@ -405,6 +473,32 @@
         </form>
 
         <div id="receipt-container" style="display: none; margin-top: 2rem;"></div>
+
+        <!-- Smart Recommendations Section -->
+        <div id="smart-recommendations-section" style="display: none; margin-top: 2rem;">
+          <div class="card" style="border: 2px solid #3b82f6; background: #fafcff;">
+            <div class="card-header" style="border-bottom: 1.5px solid #bfdbfe; padding-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                  <span style="font-size: 1.5rem;">🌟</span>
+                  <h3 class="card-title" style="color: #1e40af; margin: 0;">
+                    ترشيحات المنظومة الذكية المخصصة لك (Smart Match Engine)
+                  </h3>
+                  <span id="rec-mutual-badge" class="badge-rec-mutual" style="display: none;"></span>
+                  <span id="rec-total-badge" class="badge-rec-regular" style="display: none;"></span>
+                </div>
+                <p style="font-size: 0.85rem; color: #475569; margin-top: 4px;">
+                  تم توليد هذه الترشيحات آلياً بمطابقة شقتك ورغباتك مع شقق ومواصفات الزملاء الآخرين الراغبين بالتبادل (مع إبراز فرص التوافق المتبادل المزدوج).
+                </p>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="refreshMyRecommendations()">🔄 تحديث الترشيحات</button>
+            </div>
+
+            <div id="smart-recommendations-grid" class="rec-grid" style="padding-top: 1.25rem;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -434,6 +528,13 @@
           <div style="font-size: 0.8rem; color: #166534; font-weight: 600;">
             ✨ سيتم إدراج اسمك وشقتك تلقائياً في رسائل الواتساب للتنسيق الودي المباشر.
           </div>
+        </div>
+
+        <!-- Smart Catalog Filter Tabs -->
+        <div class="catalog-smart-filters" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+          <button type="button" class="btn-cat-filter active" id="btn-cat-all" onclick="setCatalogSmartFilter('all')">🏢 جميع الشقق المعروضة (<span id="cat-count-all">0</span>)</button>
+          <button type="button" class="btn-cat-filter" id="btn-cat-mutual" onclick="setCatalogSmartFilter('mutual')">🤝 فرص التوافق المزدوج المثالي (<span id="cat-count-mutual">0</span>)</button>
+          <button type="button" class="btn-cat-filter" id="btn-cat-rec" onclick="setCatalogSmartFilter('recommended')">⭐ شقق ترشحها المنظومة لرغباتك (<span id="cat-count-rec">0</span>)</button>
         </div>
 
         <div id="catalog-guest-banner" style="background: #fffbeb; border: 1.5px dashed #fcd34d; border-radius: 8px; padding: 0.65rem 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
