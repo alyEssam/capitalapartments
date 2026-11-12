@@ -308,6 +308,7 @@ function initFormListeners() {
       if (bldgSelect && bldgSelect.value) {
         onBuildingSelected();
       }
+      lookupExistingUserPreferences(true);
     } else {
       feedback.textContent = "يتم استخراج تاريخ الميلاد والسن تلقائياً";
       applyDirectSwapLock(null);
@@ -322,6 +323,10 @@ function initFormListeners() {
 // SWAP STATUS CONTROLLER (3 CHOICES)
 // =========================================================
 function setSwapStatus(status) {
+  if (state.currentUser && state.currentUser.isDirectSwapLocked) {
+    showToast("🔒 التبادل الثنائي معتمد ومقفل رسمياً، ولا يمكن تغيير الحالة إلا من خلال لجنة التبديل وإلغاء الاعتماد من لوحة الإدارة أولاً.", "warning");
+    return;
+  }
   state.swapStatus = status;
 
   const choiceSwap = document.getElementById("choice-status-swap");
@@ -375,7 +380,42 @@ function onPartnerQueryInput() {
     return;
   }
 
+  // 1. Check if user typed their own apartment's National Property ID or personal info
+  const myApt = state.apartments.find(a => a.id === state.selectedAptId);
+  const myNid = (document.getElementById("reg-nid") ? document.getElementById("reg-nid").value.trim() : "") || (state.currentUser ? state.currentUser.national_id : "");
+  const myPhone = (document.getElementById("reg-phone") ? document.getElementById("reg-phone").value.trim() : "") || (state.currentUser ? state.currentUser.phone : "");
+
+  const isOwnApt = myApt && (
+    q === myApt.national_property_id ||
+    q.toUpperCase() === myApt.code.toUpperCase() ||
+    (q.length >= 8 && myApt.national_property_id && myApt.national_property_id.endsWith(q))
+  );
+  const isOwnPerson = (myNid && q === myNid) || (myPhone && q === myPhone);
+
+  if (isOwnApt || isOwnPerson) {
+    clearTimeout(partnerLookupTimeout);
+    box.style.display = "block";
+    box.innerHTML = `
+      <div style="background: #fef2f2; border: 1.5px solid #f87171; border-radius: 8px; padding: 0.85rem; color: #991b1b;">
+        <div style="font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 4px;">
+          <span>⛔</span>
+          <span>تنبيه: هذا الرقم يخص شقتك أنت الأصلية التي فزت بها!</span>
+        </div>
+        <div style="font-size: 0.84rem; color: #7f1d1d; line-height: 1.6;">
+          لقد قمت بإدخال الرقم الخاص بشقتك الحالية.<br>
+          <strong>برجاء إدخال الرقم القومي العقاري للشقة التي ترغب في تبديلها مع شقتك</strong> 
+          (أو الرقم القومي أو رقم محمول الزميل الطرف الثاني المتفق معه).
+        </div>
+      </div>
+    `;
+    box.style.background = "#fef2f2";
+    box.style.borderColor = "#f87171";
+    return;
+  }
+
   box.style.display = "block";
+  box.style.background = "white";
+  box.style.borderColor = "#fcd34d";
   box.innerHTML = `<span style="color: #64748b; font-size: 0.8rem;">🔍 جارٍ البحث عن بيانات الزميل بالمنظومة...</span>`;
 
   clearTimeout(partnerLookupTimeout);
@@ -835,8 +875,21 @@ async function handleRegistrationSubmit(e) {
   // If AGREED_DIRECT has a partner query, validate/use it; if empty, allow saving as pending agreement
   if (state.swapStatus === 'AGREED_DIRECT') {
     const partnerQuery = document.getElementById("reg-partner-query") ? document.getElementById("reg-partner-query").value.trim() : "";
-    if (!partnerQuery) {
-      // Soft guidance toast rather than blocking error
+    if (partnerQuery) {
+      const myApt = state.apartments.find(a => a.id === state.selectedAptId);
+      const isOwnApt = myApt && (
+        partnerQuery === myApt.national_property_id ||
+        partnerQuery.toUpperCase() === myApt.code.toUpperCase() ||
+        (partnerQuery.length >= 8 && myApt.national_property_id && myApt.national_property_id.endsWith(partnerQuery))
+      );
+      const isOwnPerson = (nid && partnerQuery === nid) || (phone && partnerQuery === phone);
+
+      if (isOwnApt || isOwnPerson) {
+        showToast("⛔ هذا الرقم يخص شقتك أنت الأصلية! برجاء إدخال الرقم القومي العقاري لشقة الزميل التي ترغب في تبديلها مع شقتك", "error");
+        if (document.getElementById("reg-partner-query")) document.getElementById("reg-partner-query").focus();
+        return;
+      }
+    } else {
       showToast("💡 تم تسجيل رغبتك بالتوافق الودي، ويمكنك كتابة بيانات الزميل لاحقاً لتأكيد الربط الآلي الفوري", "info");
     }
   }
@@ -865,6 +918,7 @@ async function handleRegistrationSubmit(e) {
     const data = await res.json();
     if (data.success) {
       setCurrentUser(data.user);
+      applyDirectSwapLock(data.user);
       if (data.user.swap_status === 'WANTS_SWAP' && (!data.user.preferences || data.user.preferences.length === 0)) {
         showToast("تم حفظ بياناتك بنجاح! شقتك ومواصفاتك معروضة الآن بالكتالوج للتواصل المباشر 1to1 مع الزملاء", "success");
       } else {
@@ -1574,21 +1628,23 @@ function applyDirectSwapLock(user) {
   const qInput = document.getElementById("reg-partner-query");
   const notesInput = document.getElementById("reg-partner-notes");
   const quickNid = document.getElementById("reg-quick-nid");
+  const wishesContainer = document.getElementById("swap-wishes-container");
+  const submitBtn = document.querySelector("#registration-form button[type='submit']") || document.getElementById("reg-submit-btn");
 
   if (user && user.isDirectSwapLocked) {
     if (alertEl) {
       alertEl.style.display = "block";
       alertEl.innerHTML = `
-        <div style="font-weight: 800; color: #b45309; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <div style="font-weight: 800; color: #b45309; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;">
           <span>🔒</span>
           <span>تم اعتماد وتفعيل التبادل الثنائي المباشر رسمياً (حالة مقفلة ومؤكدة):</span>
         </div>
-        <div style="font-size: 0.84rem; color: #78350f; margin-top: 5px; line-height: 1.5;">
+        <div style="font-size: 0.86rem; color: #78350f; margin-top: 5px; line-height: 1.6;">
           أنت والزميل الطرف الثاني مفعلان في المنظومة كـ <strong>تبادل ثنائي معتمد رسمي</strong> برقم اعتماد (#${user.activeDirectSwapId || 'DIRECT'}).
           وفقاً لضوابط لجنة التبديل الرسمية لمنع التراجع الفردي، <strong>لا يمكن الرجوع عن التوافق أو تعديل الحالة إلا من خلال الإدارة ولجنة التبديل</strong> بعد تقديم طلب رسمي لإلغاء الاعتماد من لوحة الإدارة.
         </div>
         ${user.partner ? `
-          <div style="margin-top: 0.65rem; padding: 0.6rem 0.85rem; background: white; border-radius: 8px; border: 1.5px solid #fcd34d; font-size: 0.82rem; color: #92400e;">
+          <div style="margin-top: 0.75rem; padding: 0.75rem 1rem; background: white; border-radius: 8px; border: 1.5px solid #fcd34d; font-size: 0.85rem; color: #92400e;">
             🤝 <strong>الزميل المتوافق معه:</strong> ${escapeHtml(user.partner.full_name)} (${user.partner.workplace || 'جهة العمل غير محددة'}) | 📞 ${user.partner.phone}
             <br>
             🏢 <strong>الشقة المخصصة لك منه:</strong> حي ${user.partner.apt_district} - مجاورة ${user.partner.apt_neighborhood} - عمارة ${user.partner.apt_building} - شقة ${user.partner.apt_unit} (${user.partner.apt_floor_label})
@@ -1597,9 +1653,31 @@ function applyDirectSwapLock(user) {
       `;
     }
 
-    if (choiceSwap) { choiceSwap.style.pointerEvents = "none"; choiceSwap.style.opacity = "0.45"; }
-    if (choiceKept) { choiceKept.style.pointerEvents = "none"; choiceKept.style.opacity = "0.45"; }
-    if (choiceAgreed) { choiceAgreed.style.pointerEvents = "none"; choiceAgreed.style.opacity = "1"; }
+    // Completely hide and disable other options so employee cannot switch away
+    if (choiceSwap) {
+      choiceSwap.style.display = "none";
+      const rad = choiceSwap.querySelector('input');
+      if (rad) { rad.checked = false; rad.disabled = true; }
+    }
+    if (choiceKept) {
+      choiceKept.style.display = "none";
+      const rad = choiceKept.querySelector('input');
+      if (rad) { rad.checked = false; rad.disabled = true; }
+    }
+    if (wishesContainer) wishesContainer.style.display = "none";
+
+    // Keep choiceAgreed visible and selected
+    if (choiceAgreed) {
+      choiceAgreed.style.display = "flex";
+      choiceAgreed.className = "decision-choice-3 selected-agreed";
+      choiceAgreed.style.pointerEvents = "none";
+      choiceAgreed.style.cursor = "not-allowed";
+      const rad = choiceAgreed.querySelector('input');
+      if (rad) { rad.checked = true; rad.disabled = true; }
+    }
+
+    state.swapStatus = 'AGREED_DIRECT';
+
     if (distSelect) distSelect.disabled = true;
     if (nhSelect) nhSelect.disabled = true;
     if (bldgSelect) bldgSelect.disabled = true;
@@ -1607,22 +1685,59 @@ function applyDirectSwapLock(user) {
     if (qInput) qInput.readOnly = true;
     if (notesInput) notesInput.readOnly = true;
     if (quickNid) quickNid.disabled = true;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.7";
+      submitBtn.style.cursor = "not-allowed";
+      submitBtn.style.background = "#64748b";
+      submitBtn.style.borderColor = "#475569";
+      submitBtn.innerHTML = "🔒 التبادل الثنائي معتمد ومقفل رسمياً (للتعديل يرجى مراجعة لجنة التبديل بالإدارة)";
+    }
   } else {
     if (alertEl) alertEl.style.display = "none";
-    if (choiceSwap) { choiceSwap.style.pointerEvents = "auto"; choiceSwap.style.opacity = "1"; }
-    if (choiceKept) { choiceKept.style.pointerEvents = "auto"; choiceKept.style.opacity = "1"; }
-    if (choiceAgreed) { choiceAgreed.style.pointerEvents = "auto"; choiceAgreed.style.opacity = "1"; }
+    if (choiceSwap) {
+      choiceSwap.style.display = "flex";
+      choiceSwap.style.pointerEvents = "auto";
+      choiceSwap.style.opacity = "1";
+      const rad = choiceSwap.querySelector('input');
+      if (rad) rad.disabled = false;
+    }
+    if (choiceKept) {
+      choiceKept.style.display = "flex";
+      choiceKept.style.pointerEvents = "auto";
+      choiceKept.style.opacity = "1";
+      const rad = choiceKept.querySelector('input');
+      if (rad) rad.disabled = false;
+    }
+    if (choiceAgreed) {
+      choiceAgreed.style.display = "flex";
+      choiceAgreed.style.pointerEvents = "auto";
+      choiceAgreed.style.cursor = "pointer";
+      choiceAgreed.style.opacity = "1";
+      const rad = choiceAgreed.querySelector('input');
+      if (rad) rad.disabled = false;
+    }
     if (distSelect) distSelect.disabled = false;
     if (qInput) qInput.readOnly = false;
     if (notesInput) notesInput.readOnly = false;
     if (quickNid) quickNid.disabled = false;
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = "1";
+      submitBtn.style.cursor = "pointer";
+      submitBtn.style.background = "";
+      submitBtn.style.borderColor = "";
+      submitBtn.innerHTML = "حفظ البيانات وإصدار إيصال التسجيل الرسمي 💾";
+    }
   }
 }
 
-async function lookupExistingUserPreferences() {
+async function lookupExistingUserPreferences(silent = false) {
   const nid = document.getElementById("reg-nid").value.trim();
   if (!nid || nid.length !== 14) {
-    showToast("يرجى إدخال الرقم القومي المكون من 14 رقماً", "error");
+    if (!silent) showToast("يرجى إدخال الرقم القومي المكون من 14 رقماً", "error");
     return;
   }
 
@@ -1630,7 +1745,7 @@ async function lookupExistingUserPreferences() {
     const res = await fetch(`/api/user/${nid}`);
     const data = await res.json();
     if (!data.success || !data.user) {
-      showToast("لم يتم العثور على تسجيل سابق بهذا الرقم القومي.", "info");
+      if (!silent) showToast("لم يتم العثور على تسجيل سابق بهذا الرقم القومي.", "info");
       return;
     }
 
