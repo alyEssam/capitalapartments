@@ -133,6 +133,144 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 404, { success: false, message: "لم يتم العثور على موظف مسجل بهذا الرقم القومي" });
       }
 
+      // Priority 1: Check if user has an active confirmed DIRECT SWAP!
+      // Direct bilateral agreements are officially binding and must appear immediately.
+      const activeDirectSwap = db.db.prepare(`
+        SELECT ds.*, 
+               u1.id as u1_id, u1.full_name as u1_name, u1.national_id as u1_nid, u1.phone as u1_phone, u1.workplace as u1_workplace, u1.random_priority_number as u1_rand,
+               u2.id as u2_id, u2.full_name as u2_name, u2.national_id as u2_nid, u2.phone as u2_phone, u2.workplace as u2_workplace, u2.random_priority_number as u2_rand,
+               a1.code as a1_code, a1.district as a1_district, a1.neighborhood as a1_neighborhood, a1.building as a1_bld,
+               a1.floor as a1_floor, a1.floor_label as a1_fl_label, a1.unit_number as a1_unit, a1.model as a1_model, a1.area as a1_area,
+               a1.meter_price as a1_price, a1.total_price as a1_total_price, a1.national_property_id as a1_nat_id,
+               a2.code as a2_code, a2.district as a2_district, a2.neighborhood as a2_neighborhood, a2.building as a2_bld,
+               a2.floor as a2_floor, a2.floor_label as a2_fl_label, a2.unit_number as a2_unit, a2.model as a2_model, a2.area as a2_area,
+               a2.meter_price as a2_price, a2.total_price as a2_total_price, a2.national_property_id as a2_nat_id
+        FROM direct_swaps ds
+        JOIN users u1 ON ds.user1_id = u1.id
+        JOIN users u2 ON ds.user2_id = u2.id
+        JOIN apartments a1 ON ds.apt1_id = a1.id
+        JOIN apartments a2 ON ds.apt2_id = a2.id
+        WHERE ds.user1_id = ? OR ds.user2_id = ?
+        ORDER BY ds.id DESC LIMIT 1
+      `).get(user.id, user.id);
+
+      if (activeDirectSwap && user.swap_status === 'AGREED_DIRECT') {
+        const isUser1 = activeDirectSwap.user1_id === user.id;
+        const myAptPrefix = isUser1 ? 'a1_' : 'a2_';
+        const partnerAptPrefix = isUser1 ? 'a2_' : 'a1_';
+        const partnerPrefix = isUser1 ? 'u2_' : 'u1_';
+
+        const partnerObj = {
+          id: activeDirectSwap[partnerPrefix + 'id'],
+          full_name: activeDirectSwap[partnerPrefix + 'name'],
+          national_id: activeDirectSwap[partnerPrefix + 'nid'],
+          phone: activeDirectSwap[partnerPrefix + 'phone'],
+          workplace: activeDirectSwap[partnerPrefix + 'workplace']
+        };
+
+        const directResult = {
+          id: activeDirectSwap.id,
+          user_id: user.id,
+          full_name: user.full_name,
+          national_id: user.national_id,
+          phone: user.phone,
+          random_priority_number: user.random_priority_number,
+          lottery_rank: user.lottery_rank,
+          swap_type: 'DIRECT_PAIR',
+          rank_achieved: 1,
+          cycle_id: `DIRECT-PAIR-${Math.min(activeDirectSwap.user1_id, activeDirectSwap.user2_id)}-${Math.max(activeDirectSwap.user1_id, activeDirectSwap.user2_id)}`,
+          original_apartment_id: isUser1 ? activeDirectSwap.apt1_id : activeDirectSwap.apt2_id,
+          assigned_apartment_id: isUser1 ? activeDirectSwap.apt2_id : activeDirectSwap.apt1_id,
+          
+          orig_code: activeDirectSwap[myAptPrefix + 'code'],
+          orig_district: activeDirectSwap[myAptPrefix + 'district'],
+          orig_neighborhood: activeDirectSwap[myAptPrefix + 'neighborhood'],
+          orig_building: activeDirectSwap[myAptPrefix + 'bld'],
+          orig_bld: activeDirectSwap[myAptPrefix + 'bld'],
+          orig_floor: activeDirectSwap[myAptPrefix + 'floor'],
+          orig_floor_label: activeDirectSwap[myAptPrefix + 'fl_label'],
+          orig_fl_label: activeDirectSwap[myAptPrefix + 'fl_label'],
+          orig_unit: activeDirectSwap[myAptPrefix + 'unit'],
+          orig_model: activeDirectSwap[myAptPrefix + 'model'],
+          orig_area: activeDirectSwap[myAptPrefix + 'area'],
+          orig_price: activeDirectSwap[myAptPrefix + 'price'],
+          orig_total_price: activeDirectSwap[myAptPrefix + 'total_price'],
+          orig_nat_id: activeDirectSwap[myAptPrefix + 'nat_id'],
+
+          assign_code: activeDirectSwap[partnerAptPrefix + 'code'],
+          assign_district: activeDirectSwap[partnerAptPrefix + 'district'],
+          assign_neighborhood: activeDirectSwap[partnerAptPrefix + 'neighborhood'],
+          assign_building: activeDirectSwap[partnerAptPrefix + 'bld'],
+          assign_bld: activeDirectSwap[partnerAptPrefix + 'bld'],
+          assign_floor: activeDirectSwap[partnerAptPrefix + 'floor'],
+          assign_floor_label: activeDirectSwap[partnerAptPrefix + 'fl_label'],
+          assign_fl_label: activeDirectSwap[partnerAptPrefix + 'fl_label'],
+          assign_unit: activeDirectSwap[partnerAptPrefix + 'unit'],
+          assign_model: activeDirectSwap[partnerAptPrefix + 'model'],
+          assign_area: activeDirectSwap[partnerAptPrefix + 'area'],
+          assign_price: activeDirectSwap[partnerAptPrefix + 'price'],
+          assign_total_price: activeDirectSwap[partnerAptPrefix + 'total_price'],
+          assign_nat_id: activeDirectSwap[partnerAptPrefix + 'nat_id'],
+
+          receivingFrom: partnerObj,
+          givingTo: partnerObj,
+          cycleMembers: [
+            {
+              id: user.id,
+              full_name: user.full_name,
+              national_id: user.national_id,
+              phone: user.phone,
+              workplace: user.workplace,
+              orig_district: activeDirectSwap[myAptPrefix + 'district'],
+              orig_neighborhood: activeDirectSwap[myAptPrefix + 'neighborhood'],
+              orig_building: activeDirectSwap[myAptPrefix + 'bld'],
+              orig_unit: activeDirectSwap[myAptPrefix + 'unit'],
+              orig_floor_label: activeDirectSwap[myAptPrefix + 'fl_label'],
+              orig_model: activeDirectSwap[myAptPrefix + 'model'],
+              orig_area: activeDirectSwap[myAptPrefix + 'area'],
+              orig_nat_id: activeDirectSwap[myAptPrefix + 'nat_id'],
+              assign_district: activeDirectSwap[partnerAptPrefix + 'district'],
+              assign_neighborhood: activeDirectSwap[partnerAptPrefix + 'neighborhood'],
+              assign_building: activeDirectSwap[partnerAptPrefix + 'bld'],
+              assign_unit: activeDirectSwap[partnerAptPrefix + 'unit'],
+              assign_floor_label: activeDirectSwap[partnerAptPrefix + 'fl_label'],
+              assign_model: activeDirectSwap[partnerAptPrefix + 'model'],
+              assign_area: activeDirectSwap[partnerAptPrefix + 'area'],
+              assign_nat_id: activeDirectSwap[partnerAptPrefix + 'nat_id']
+            },
+            {
+              id: partnerObj.id,
+              full_name: partnerObj.full_name,
+              national_id: partnerObj.national_id,
+              phone: partnerObj.phone,
+              workplace: partnerObj.workplace,
+              orig_district: activeDirectSwap[partnerAptPrefix + 'district'],
+              orig_neighborhood: activeDirectSwap[partnerAptPrefix + 'neighborhood'],
+              orig_building: activeDirectSwap[partnerAptPrefix + 'bld'],
+              orig_unit: activeDirectSwap[partnerAptPrefix + 'unit'],
+              orig_floor_label: activeDirectSwap[partnerAptPrefix + 'fl_label'],
+              orig_model: activeDirectSwap[partnerAptPrefix + 'model'],
+              orig_area: activeDirectSwap[partnerAptPrefix + 'area'],
+              orig_nat_id: activeDirectSwap[partnerAptPrefix + 'nat_id'],
+              assign_district: activeDirectSwap[myAptPrefix + 'district'],
+              assign_neighborhood: activeDirectSwap[myAptPrefix + 'neighborhood'],
+              assign_building: activeDirectSwap[myAptPrefix + 'bld'],
+              assign_unit: activeDirectSwap[myAptPrefix + 'unit'],
+              assign_floor_label: activeDirectSwap[myAptPrefix + 'fl_label'],
+              assign_model: activeDirectSwap[myAptPrefix + 'model'],
+              assign_area: activeDirectSwap[myAptPrefix + 'area'],
+              assign_nat_id: activeDirectSwap[myAptPrefix + 'nat_id']
+            }
+          ]
+        };
+
+        return sendJson(res, 200, {
+          success: true,
+          published: true,
+          result: directResult
+        });
+      }
+
       const latestRun = db.db.prepare("SELECT * FROM swap_runs WHERE is_published = 1 ORDER BY id DESC LIMIT 1").get();
       if (!latestRun) {
         return sendJson(res, 200, {
