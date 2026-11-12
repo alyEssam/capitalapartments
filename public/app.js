@@ -9,6 +9,10 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+function escapeRegexSpecial(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function appendNote(elementId, text) {
   const el = document.getElementById(elementId);
   if (!el) return;
@@ -16,17 +20,7 @@ function appendNote(elementId, text) {
   
   if (val.includes(text)) {
     // Toggle off
-    const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, '\\function appendNote(elementId, text) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  const current = el.value.trim();
-  if (!current) {
-    el.value = text;
-  } else if (!current.includes(text)) {
-    el.value = current + ' - ' + text;
-  }
-  el.focus();
-}');
+    const escaped = escapeRegexSpecial(text);
     const regex = new RegExp('(?:\\s*-\\s*)?' + escaped + '(?:\\s*-\\s*)?', 'g');
     val = val.replace(regex, ' - ').replace(/^[\\s-]+|[\\s-]+$/g, '').trim();
     el.value = val;
