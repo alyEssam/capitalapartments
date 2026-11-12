@@ -208,6 +208,24 @@
 
                             <!-- Preferences / Desires & Refusals Comment Box for WANTS_SWAP -->
               <div id="swap-wishes-container" style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 1.25rem; margin-top: 0.25rem; margin-bottom: 0.5rem;">
+
+                <div class="share-apartment-banner">
+                  <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <span style="font-size: 1.6rem; line-height: 1;">📢</span>
+                    <div>
+                      <div style="font-weight: 800; color: #166534; font-size: 0.92rem;">
+                        مشاركة إعلان شقتك على جروبات واتساب وتليجرام للتبادل:
+                      </div>
+                      <div style="font-size: 0.78rem; color: #475569; margin-top: 1px;">
+                        توليد إعلان رسمي منسق وجاهز بالمواصفات ورغباتك لنشره مباشرة بنقرة زر في جروبات الزملاء.
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-gold btn-sm" onclick="openShareApartmentModal()" style="font-size: 0.84rem; padding: 7px 16px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(217,119,6,0.25);">
+                    <span>📢</span>
+                    <span>مشاركة إعلان شقتي الآن</span>
+                  </button>
+                </div>
                 <div style="font-weight: 800; color: #166534; font-size: 0.98rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
                   <span>🎯</span>
                   <span>تحديد مواصفات الشقة المرغوبة والمرفوضة (لتوليد الترشيحات الذكية وتسهيل التواصل الثنائي):</span>
@@ -456,6 +474,25 @@
         <div id="smart-recommendations-section" style="display: none; margin-top: 2rem;">
           <div class="card" style="border: 2px solid #3b82f6; background: #fafcff;">
             <div class="card-header" style="border-bottom: 1.5px solid #bfdbfe; padding-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+            <!-- New Matches Alert Banner -->
+            <div id="new-match-alert-banner" class="new-match-alert-banner" style="display: none; margin: 1rem 1.25rem 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="bell-pulse-icon">🔔</span>
+                <div>
+                  <div style="font-weight: 800; color: #1e3a8a; font-size: 0.95rem;">
+                    تنبيه ذكي: تم رصد <span id="new-matches-count-badge" class="badge-new-counter">0</span> شقق جديدة مسجلة حديثاً تطابق رغباتك تماماً!
+                  </div>
+                  <div style="font-size: 0.78rem; color: #475569; margin-top: 2px;">
+                    هذه الوحدات تم تسجيلها مؤخراً بالمنصة من قِبل زملائك وتتوافق مع مواصفاتك وشروطك المحددة.
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm btn-gold" id="btn-filter-new-recs" onclick="toggleFilterNewMatchesOnly()" style="font-weight: 800; font-size: 0.8rem;">
+                  ✨ عرض الشقق الجديدة فقط
+                </button>
+              </div>
+            </div>
               <div>
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                   <span style="font-size: 1.5rem;">🌟</span>
@@ -1060,5 +1097,49 @@
     </div>
   </div>
 
+
+  <!-- Share My Apartment Announcement Modal -->
+  <div id="share-apartment-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: white; border-radius: 14px; width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); position: relative; border: 2px solid #3b82f6;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.6rem;">📢</span>
+          <div>
+            <h3 style="font-weight: 800; color: #1e40af; margin: 0; font-size: 1.1rem;">مشاركة إعلان شقتك على جروبات التبادل</h3>
+            <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">إعلان رسمي منسق وجاهز للنشر المباشر على واتساب وتليجرام وفيسبوك</div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="closeShareModal()">✕ إغلاق</button>
+      </div>
+
+      <!-- Live Preview of Ad -->
+      <div style="margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <span style="font-size: 0.82rem; font-weight: 700; color: #1e3a8a;">📋 معاينة نص الإعلان الجاهز للنشر:</span>
+          <button type="button" class="btn btn-outline btn-sm" onclick="copyShareText()" id="btn-copy-share" style="font-size: 0.76rem; padding: 3px 8px;">
+            📋 نسخ الإعلان
+          </button>
+        </div>
+        <textarea id="share-ad-text" class="form-control" rows="10" readonly style="font-size: 0.82rem; font-family: monospace; background: #f8fafc; line-height: 1.5; color: #1e293b; border-color: #cbd5e1; resize: vertical;"></textarea>
+      </div>
+
+      <!-- Action Share Buttons -->
+      <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+          <a id="btn-share-whatsapp" href="#" target="_blank" class="btn-whatsapp" style="text-align: center; text-decoration: none; padding: 10px 14px; font-weight: 800; font-size: 0.88rem; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>💬</span>
+            <span>مشاركة لجروبات واتساب</span>
+          </a>
+          <a id="btn-share-telegram" href="#" target="_blank" class="btn-telegram" style="text-align: center; text-decoration: none; padding: 10px 14px; font-weight: 800; font-size: 0.88rem; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>✈️</span>
+            <span>مشاركة لجروبات تليجرام</span>
+          </a>
+        </div>
+        <button type="button" class="btn btn-outline" onclick="copyShareText()" style="padding: 9px; font-weight: 700; font-size: 0.85rem;">
+          📋 نسخ النص بالكامل ولصقه يدوياً في أي جروب أو فيسبوك
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

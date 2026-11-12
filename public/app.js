@@ -3038,6 +3038,18 @@ async function loadSmartRecommendations(nid) {
 
     state.smartRecommendations = data.recommendations;
     state.mutualMatches = data.recommendations.filter(r => r.isMutualMatch);
+    state.newMatches = data.recommendations.filter(r => r.isNewMatch);
+
+    // New Match Alert Banner
+    const newAlertBanner = document.getElementById("new-match-alert-banner");
+    const newCounterBadge = document.getElementById("new-matches-count-badge");
+    if (data.newMatchesCount > 0) {
+      if (newAlertBanner) newAlertBanner.style.display = "flex";
+      if (newCounterBadge) newCounterBadge.textContent = data.newMatchesCount;
+      showToast(`🔔 تنبيه: تم رصد ${data.newMatchesCount} شقق جديدة مسجلة حديثاً تطابق مواصفاتك تماماً!`, "info");
+    } else {
+      if (newAlertBanner) newAlertBanner.style.display = "none";
+    }
 
     // Update badges in header
     if (data.mutualCount > 0) {
@@ -3113,7 +3125,13 @@ function renderSmartRecommendationsGrid(recs) {
           <!-- Top Row: Badge & Code -->
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.4rem;">
             ${isMutual ? `
-              <span class="badge-rec-mutual">
+              ${r.isNewMatch ? `
+              <span class="badge-rec-new">
+                <span>✨</span>
+                <strong>جديد (${r.registeredAgo || 'حديثاً'})</strong>
+              </span>
+            ` : ''}
+            <span class="badge-rec-mutual">
                 <span>🤝</span>
                 <strong>توافق مزدوج متبادل (${r.matchScore}%)</strong>
               </span>
@@ -3262,4 +3280,121 @@ function reopenRecommendationsSection() {
   if (section) section.style.display = "block";
   if (grid) grid.style.display = "grid";
   showToast("تم فتح قسم الترشيحات الذكية بنجاح 🌟", "success");
+}
+
+
+// =========================================================
+// SHARE APARTMENT ON WHATSAPP & TELEGRAM
+// =========================================================
+function generateApartmentShareText() {
+  const name = document.getElementById("reg-name")?.value.trim() || state.currentUser?.full_name || "زميل موظف";
+  const workplace = document.getElementById("reg-workplace")?.value.trim() || state.currentUser?.workplace || "الجهاز الإداري للدولة";
+  const phone = document.getElementById("reg-phone")?.value.trim() || state.currentUser?.phone || "";
+  const desired = document.getElementById("reg-desired-notes")?.value.trim() || state.currentUser?.swap_desired_notes || "مطلوب أي شقة مناسبة";
+  const undesired = document.getElementById("reg-undesired-notes")?.value.trim() || state.currentUser?.swap_undesired_notes || "لا توجد موانع معلنة";
+  
+  let apt = null;
+  if (state.selectedAptId) {
+    apt = state.apartments.find(a => a.id === Number(state.selectedAptId));
+  } else if (state.currentUser && state.currentUser.original_apartment_id) {
+    apt = state.apartments.find(a => a.id === Number(state.currentUser.original_apartment_id));
+  }
+
+  if (!apt) {
+    showToast("يرجى اختيار وتحديد شقتك الأصلية أولاً لتوليد إعلان المشاركة", "warning");
+    return null;
+  }
+
+  const distName = apt.district === 'R3' ? 'الحي الثالث (R3)' : 'حي جاردن سيتي (R5)';
+  const cleanPhone = phone.replace(/\D/g, '').replace(/^0/, '');
+  const waUrl = cleanPhone ? `https://wa.me/20${cleanPhone}` : '';
+  const siteUrl = window.location.origin;
+
+  const text = `🏛️ *إعلان رغبة في التبديل السكني - قرعة العاصمة الإدارية* 🏛️
+━━━━━━━━━━━━━━━━━━
+📍 *بيانات شقتي المعروضة للتبادل:*
+▫️ الحي: ${distName}
+▫️ المجاورة: ${apt.neighborhood} - عمارة ${apt.building} - شقة ${apt.unit_number}
+▫️ الدور: ${apt.floor_label} | نموذج: ${apt.model}
+▫️ المساحة: ${apt.area} م² | نسبة التميز: ${apt.distinction}
+▫️ سعر المتر: ${apt.meter_price.toLocaleString('ar-EG')} ج.م
+▫️ الرقم القومي العقاري: ${apt.national_property_id}
+
+🎯 *المواصفات المطلوبة في الشقة البديلة:*
+${desired}
+
+⛔ *المواصفات المرفوضة تماماً:*
+${undesired}
+
+👤 *للتواصل والتنسيق الودي المباشر (One-to-One):*
+▫️ الاسم: ${name}
+▫️ جهة العمل: ${workplace}
+▫️ رقم المحمول: ${phone}${waUrl ? `\n▫️ واتساب مباشر: ${waUrl}` : ''}
+▫️ رابط المنصة: ${siteUrl}
+━━━━━━━━━━━━━━━━━━
+منظومة التبادل السكني للعاملين بالدولة`;
+
+  return { text, apt, name, phone, waUrl, siteUrl };
+}
+
+function openShareApartmentModal() {
+  const data = generateApartmentShareText();
+  if (!data) return;
+
+  const modal = document.getElementById("share-apartment-modal");
+  const textarea = document.getElementById("share-ad-text");
+  const btnWa = document.getElementById("btn-share-whatsapp");
+  const btnTg = document.getElementById("btn-share-telegram");
+
+  if (textarea) textarea.value = data.text;
+  if (btnWa) btnWa.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(data.text)}`;
+  if (btnTg) btnTg.href = `https://t.me/share/url?url=${encodeURIComponent(data.siteUrl)}&text=${encodeURIComponent(data.text)}`;
+
+  if (modal) {
+    modal.style.display = "flex";
+  }
+}
+
+function closeShareModal() {
+  const modal = document.getElementById("share-apartment-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function copyShareText() {
+  const textarea = document.getElementById("share-ad-text");
+  if (!textarea || !textarea.value) return;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(textarea.value).then(() => {
+      showToast("تم نسخ نص الإعلان بنجاح! يمكنك لصقه الآن في أي جروب واتساب أو تليجرام أو فيسبوك 📋", "success");
+    }).catch(() => {
+      fallbackCopyText(textarea);
+    });
+  } else {
+    fallbackCopyText(textarea);
+  }
+}
+
+function fallbackCopyText(textarea) {
+  textarea.select();
+  document.execCommand('copy');
+  showToast("تم نسخ نص الإعلان بنجاح! 📋", "success");
+}
+
+let showingOnlyNewMatches = false;
+function toggleFilterNewMatchesOnly() {
+  const btn = document.getElementById("btn-filter-new-recs");
+  if (!state.smartRecommendations) return;
+
+  showingOnlyNewMatches = !showingOnlyNewMatches;
+  if (showingOnlyNewMatches) {
+    const filtered = state.smartRecommendations.filter(r => r.isNewMatch);
+    renderSmartRecommendationsGrid(filtered);
+    if (btn) btn.textContent = "⬅️ عرض كل الترشيحات";
+    showToast(`تم تصفية العرض لإظهار ${filtered.length} شقق جديدة فقط ⭐`, "info");
+  } else {
+    renderSmartRecommendationsGrid(state.smartRecommendations);
+    if (btn) btn.textContent = `✨ عرض الشقق الجديدة فقط (${state.newMatches ? state.newMatches.length : 0})`;
+    showToast("تم استعادة عرض كافة الترشيحات", "info");
+  }
 }

@@ -1063,3 +1063,91 @@ body {
 
 
 
+
+
+/* Telegram button style */
+.btn-telegram {
+  background: #0088cc;
+  color: white;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+}
+.btn-telegram:hover {
+  background: #0077b5;
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* New Match Alert Banner & Badges */
+.new-match-alert-banner {
+  background: linear-gradient(135deg, #eff6ff 0%, #fef3c7 100%);
+  border: 1.5px solid #fcd34d;
+  border-radius: 12px;
+  padding: 0.85rem 1.15rem;
+  margin: 0.75rem 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15);
+  animation: slide-in-top 0.4s ease-out;
+}
+
+@keyframes slide-in-top {
+  0% { transform: translateY(-8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.bell-pulse-icon {
+  font-size: 1.6rem;
+  display: inline-block;
+  animation: bell-ring 2.5s infinite ease;
+}
+
+@keyframes bell-ring {
+  0%, 100% { transform: rotate(0); }
+  10%, 30% { transform: rotate(14deg); }
+  20%, 40% { transform: rotate(-14deg); }
+  50% { transform: rotate(0); }
+}
+
+.badge-new-counter {
+  background: #dc2626;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+.badge-rec-new {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Share Apartment Banner */
+.share-apartment-banner {
+  background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+  border: 1.5px solid #86efac;
+  border-radius: 12px;
+  padding: 0.85rem 1.15rem;
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
