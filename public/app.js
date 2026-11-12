@@ -12,6 +12,13 @@ function escapeHtml(str) {
 function appendNote(elementId, text) {
   const el = document.getElementById(elementId);
   if (!el) return;
+  let val = el.value.trim();
+  
+  if (val.includes(text)) {
+    // Toggle off
+    const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, '\\function appendNote(elementId, text) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
   const current = el.value.trim();
   if (!current) {
     el.value = text;
@@ -19,6 +26,52 @@ function appendNote(elementId, text) {
     el.value = current + ' - ' + text;
   }
   el.focus();
+}');
+    const regex = new RegExp('(?:\\s*-\\s*)?' + escaped + '(?:\\s*-\\s*)?', 'g');
+    val = val.replace(regex, ' - ').replace(/^[\\s-]+|[\\s-]+$/g, '').trim();
+    el.value = val;
+  } else {
+    // Append
+    if (val.length > 0) {
+      el.value = val + ' - ' + text;
+    } else {
+      el.value = text;
+    }
+  }
+  
+  onNotesInput();
+}
+
+function updateTagPillsState() {
+  const desVal = document.getElementById("reg-desired-notes")?.value || "";
+  const undesVal = document.getElementById("reg-undesired-notes")?.value || "";
+  
+  document.querySelectorAll('.tag-pill-smart').forEach(pill => {
+    const noteText = pill.getAttribute('data-note');
+    const target = pill.getAttribute('data-target');
+    if (!noteText || !target) return;
+    
+    const currentVal = target === 'desired' ? desVal : undesVal;
+    if (currentVal.includes(noteText)) {
+      pill.classList.add('active-tag');
+    } else {
+      pill.classList.remove('active-tag');
+    }
+  });
+}
+
+let notesDebounceTimer = null;
+function onNotesInput() {
+  updateTagPillsState();
+  
+  clearTimeout(notesDebounceTimer);
+  notesDebounceTimer = setTimeout(() => {
+    const nidInput = document.getElementById("reg-nid");
+    const nid = nidInput ? nidInput.value.trim() : (state.currentUser ? state.currentUser.national_id : "");
+    if (nid && nid.length === 14) {
+      loadSmartRecommendations(nid);
+    }
+  }, 400);
 }
 
 // public/app.js - Multi-Phase Housing Swap Platform with 1-to-1 Direct Marketplace
@@ -229,6 +282,10 @@ function applySystemPhaseUI(phase) {
       badge3.className = 'phase-btn-badge badge-phase-active';
       badge3.textContent = 'المرحلة الحالية النشطة ✔️';
     }
+  }
+
+  if (state.smartRecommendations && state.smartRecommendations.length > 0) {
+    renderSmartRecommendationsGrid(state.smartRecommendations);
   }
 }
 
@@ -1811,6 +1868,7 @@ async function lookupExistingUserPreferences(silent = false) {
     const undesInput = document.getElementById("reg-undesired-notes");
     if (desInput) desInput.value = u.swap_desired_notes || "";
     if (undesInput) undesInput.value = u.swap_undesired_notes || "";
+    updateTagPillsState();
 
     // Restore Smart Filters pills & checkboxes
     selectPrefPill('target-district', u.target_district || 'ANY', false);
@@ -2959,7 +3017,13 @@ async function loadSmartRecommendations(nid) {
   section.style.display = "block";
 
   try {
-    const res = await fetch(`/api/recommendations/${nid}`);
+    const desNotes = document.getElementById("reg-desired-notes")?.value.trim() || "";
+    const undesNotes = document.getElementById("reg-undesired-notes")?.value.trim() || "";
+    let apiUrl = `/api/recommendations/${encodeURIComponent(nid)}`;
+    if (desNotes || undesNotes) {
+      apiUrl += `?desired=${encodeURIComponent(desNotes)}&undesired=${encodeURIComponent(undesNotes)}`;
+    }
+    const res = await fetch(apiUrl);
     const data = await res.json();
 
     if (!data.success || !data.recommendations || data.recommendations.length === 0) {
@@ -3118,9 +3182,11 @@ function renderSmartRecommendationsGrid(recs) {
           <a href="tel:${r.candidatePhone}" class="btn-call" style="padding: 6px 10px; font-size: 0.8rem;">
             📞 اتصال
           </a>
-          <button type="button" class="btn btn-outline btn-sm" onclick="addPreferenceFromRec(${apt.id})" title="إضافة لقائمة الرغبات بالقرعة">
-            ➕ رغبة
-          </button>
+          ${(state.systemPhase === 'PHASE_2_PREFERENCES') ? `
+            <button type="button" class="btn btn-outline btn-sm" onclick="addPreferenceFromRec(${apt.id})" title="إضافة لقائمة الرغبات بالقرعة">
+              ➕ رغبة
+            </button>
+          ` : ''}
           <button type="button" class="btn btn-gold btn-sm" onclick="requestDirectSwapFromRec('${r.candidateNid}', '${r.candidateName}')" title="بدء توافق ودي مباشر مع هذا الزميل">
             🤝 توافق
           </button>

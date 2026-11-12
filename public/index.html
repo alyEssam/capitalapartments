@@ -207,116 +207,87 @@
               </div>
 
                             <!-- Preferences / Desires & Refusals Comment Box for WANTS_SWAP -->
-              <div id="swap-wishes-container" style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 1.25rem; margin-top: 0.25rem; margin-bottom: 0.5rem;">
-                <div style="font-weight: 800; color: #166534; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
-                  <span>📝</span>
-                  <span>تفضيلات ومواصفات الشقة المطلوبة وغير المرغوبة (تظهر لزملائك في الكتالوج للتواصل 1to1):</span>
+              <div id="swap-wishes-container" style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 1.25rem; margin-top: 0.25rem; margin-bottom: 0.5rem;">
+                <div style="font-weight: 800; color: #166534; font-size: 0.98rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
+                  <span>🎯</span>
+                  <span>تحديد مواصفات الشقة المرغوبة والمرفوضة (لتوليد الترشيحات الذكية وتسهيل التواصل الثنائي):</span>
                 </div>
                 <div style="font-size: 0.82rem; color: #15803d; margin-bottom: 0.85rem; line-height: 1.5;">
-                  اكتب هنا ما ترغب به وما ترفضه في الشقة البديلة، لتسهيل تواصل الزملاء معك للتبادل المباشر (One-to-One) أو التوافق الودي.
+                  اكتب رغباتك وموانعك بحرية أو استخدم الاختيارات السريعة بنقرة زر واحدة لإضافتها/إزالتها، وسيقوم المحرك الذكي باقتراح أفضل الشقق المتطابقة وفرص التوافق المزدوج فوراً.
                 </div>
 
-                <!-- Smart Filter Pills for Targeted Matching -->
-                <div style="background: white; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
-                  <div style="font-weight: 800; color: #166534; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
-                    <span>⚡</span>
-                    <span>تحديد رغباتك الأساسية بنقرة زر (لتوليد الترشيحات الذكية والتوافق المتبادل):</span>
-                  </div>
-                  <div style="font-size: 0.8rem; color: #15803d; margin-bottom: 0.85rem;">
-                    اختر مواصفات الشقة التي ترغب بالانتقال إليها وموانعك المطلقة، ليقوم المحرك الذكي باقتراح أفضل الشقق المتطابقة وإبراز فرص التوافق المزدوج فوراً:
-                  </div>
+                <!-- Hidden inputs for backward compatibility -->
+                <input type="hidden" id="filter-target-district" value="ANY">
+                <input type="hidden" id="filter-target-floor" value="ANY">
+                <input type="hidden" id="filter-target-area" value="ANY">
+                <input type="hidden" id="filter-reject-district" value="NONE">
+                <input type="hidden" id="filter-reject-ground" value="0">
+                <input type="hidden" id="filter-reject-last" value="0">
 
-                  <div class="grid-2" style="gap: 0.85rem; margin-bottom: 0.5rem;">
-                    <!-- Target District -->
+                <div class="grid-2" style="gap: 1rem; align-items: stretch;">
+                  <!-- Card 1: Desired Specifications -->
+                  <div style="background: #ffffff; border: 1.5px solid #86efac; border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
                     <div>
-                      <label style="font-size: 0.8rem; font-weight: 700; color: #1e3a8a; margin-bottom: 4px; display: block;">📍 الحي المفضل:</label>
-                      <div class="pill-selector-group" id="group-target-district">
-                        <button type="button" class="btn-pill active" data-val="ANY" onclick="selectPrefPill('target-district', 'ANY')">الكل (R3 أو R5)</button>
-                        <button type="button" class="btn-pill" data-val="R3" onclick="selectPrefPill('target-district', 'R3')">الحي الثالث (R3)</button>
-                        <button type="button" class="btn-pill" data-val="R5" onclick="selectPrefPill('target-district', 'R5')">جاردن سيتي (R5)</button>
-                      </div>
-                      <input type="hidden" id="filter-target-district" value="ANY">
-                    </div>
-
-                    <!-- Target Floor -->
-                    <div>
-                      <label style="font-size: 0.8rem; font-weight: 700; color: #1e3a8a; margin-bottom: 4px; display: block;">🏢 الدور المرغوب:</label>
-                      <div class="pill-selector-group" id="group-target-floor">
-                        <button type="button" class="btn-pill active" data-val="ANY" onclick="selectPrefPill('target-floor', 'ANY')">أي دور</button>
-                        <button type="button" class="btn-pill" data-val="REPEATED" onclick="selectPrefPill('target-floor', 'REPEATED')">متكرر (2 - 5)</button>
-                        <button type="button" class="btn-pill" data-val="GROUND" onclick="selectPrefPill('target-floor', 'GROUND')">دور أرضي</button>
-                        <button type="button" class="btn-pill" data-val="LAST" onclick="selectPrefPill('target-floor', 'LAST')">دور أخير (6)</button>
-                      </div>
-                      <input type="hidden" id="filter-target-floor" value="ANY">
-                    </div>
-
-                    <!-- Target Area -->
-                    <div>
-                      <label style="font-size: 0.8rem; font-weight: 700; color: #1e3a8a; margin-bottom: 4px; display: block;">📐 المساحة المطلوبة:</label>
-                      <div class="pill-selector-group" id="group-target-area">
-                        <button type="button" class="btn-pill active" data-val="ANY" onclick="selectPrefPill('target-area', 'ANY')">أي مساحة</button>
-                        <button type="button" class="btn-pill" data-val="LARGER" onclick="selectPrefPill('target-area', 'LARGER')">أكبر من مساحتي</button>
-                        <button type="button" class="btn-pill" data-val="SIMILAR" onclick="selectPrefPill('target-area', 'SIMILAR')">متقاربة (±10م²)</button>
-                        <button type="button" class="btn-pill" data-val="SMALLER" onclick="selectPrefPill('target-area', 'SMALLER')">أصغر من مساحتي</button>
-                      </div>
-                      <input type="hidden" id="filter-target-area" value="ANY">
-                    </div>
-
-                    <!-- Dealbreakers -->
-                    <div>
-                      <label style="font-size: 0.8rem; font-weight: 700; color: #991b1b; margin-bottom: 4px; display: block;">⛔ شروط مانعة (مرفوض تماماً):</label>
-                      <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-top: 4px;">
-                        <label class="dealbreaker-checkbox">
-                          <input type="checkbox" id="filter-reject-ground" onchange="onDealbreakerChanged()">
-                          <span>أرفض الأرضي</span>
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+                        <label for="reg-desired-notes" style="font-size: 0.88rem; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 0.35rem; margin: 0;">
+                          <span>🎯</span>
+                          <span>المواصفات المرغوبة (ما أبحث عنه):</span>
                         </label>
-                        <label class="dealbreaker-checkbox">
-                          <input type="checkbox" id="filter-reject-last" onchange="onDealbreakerChanged()">
-                          <span>أرفض الأخير</span>
-                        </label>
-                        <select id="filter-reject-district" class="form-select form-select-sm" style="font-size: 0.78rem; padding: 2px 8px; width: auto; height: 30px;" onchange="onDealbreakerChanged()">
-                          <option value="NONE">لا أرفض حياً معيناً</option>
-                          <option value="R3">أرفض الحي R3</option>
-                          <option value="R5">أرفض الحي R5</option>
-                        </select>
+                        <span style="font-size: 0.72rem; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 7px; border-radius: 10px; font-weight: 600;">⚡ نقرة للإضافة/الحذف</span>
+                      </div>
+                      <textarea id="reg-desired-notes" class="form-control" rows="3" placeholder="اكتب بالتفصيل ما ترغب به في الشقة البديلة، أو انقر على الاختيارات السريعة بالأسفل..." style="font-size: 0.85rem; line-height: 1.45; border-color: #86efac;" oninput="onNotesInput()"></textarea>
+                    </div>
+
+                    <div style="margin-top: 0.65rem;">
+                      <div style="font-size: 0.75rem; font-weight: 700; color: #166534; margin-bottom: 0.35rem;">
+                        👇 اختيارات سريعة بنقرة زر (تضاف لنص رغباتك وتحدث الترشيحات):
+                      </div>
+                      <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button type="button" class="tag-pill-smart tag-pill-des" data-target="desired" data-note="مطلوب الحي R3" onclick="appendNote('reg-desired-notes', 'مطلوب الحي R3')">➕ مطلوب الحي R3</button>
+                        <button type="button" class="tag-pill-smart tag-pill-des" data-target="desired" data-note="مطلوب جاردن سيتي R5" onclick="appendNote('reg-desired-notes', 'مطلوب جاردن سيتي R5')">➕ مطلوب جاردن سيتي R5</button>
+                        <button type="button" class="tag-pill-smart tag-pill-des" data-target="desired" data-note="دور متكرر (2 - 5)" onclick="appendNote('reg-desired-notes', 'دور متكرر (2 - 5)')">➕ دور متكرر (2 - 5)</button>
+                        <button type="button" class="tag-pill-smart tag-pill-des" data-target="desired" data-note="دور أرضي" onclick="appendNote('reg-desired-notes', 'دور أرضي')">➕ دور أرضي</button>
+                        <button type="button" class="tag-pill-smart tag-pill-des" data-target="desired" data-note="دور أخير" onclick="appendNote('reg-desired-notes', 'دور أخير')">➕ دور أخير</button>
+                        <button type="button" class="tag-pill-smart tag-pill-des" data-target="desired" data-note="مساحة 140 - 160م²" onclick="appendNote('reg-desired-notes', 'مساحة 140 - 160م²')">➕ مساحة 140 - 160م²</button>
+                        <button type="button" class="tag-pill-smart tag-pill-des" data-target="desired" data-note="مساحة 170 - 173م²" onclick="appendNote('reg-desired-notes', 'مساحة 170 - 173م²')">➕ مساحة 170 - 173م²</button>
+                        <button type="button" class="tag-pill-smart tag-pill-des" data-target="desired" data-note="مساحة أكبر من شقتي" onclick="appendNote('reg-desired-notes', 'مساحة أكبر من شقتي')">➕ مساحة أكبر من شقتي</button>
+                        <button type="button" class="tag-pill-smart tag-pill-des" data-target="desired" data-note="مساحة متقاربة لمساحتي" onclick="appendNote('reg-desired-notes', 'مساحة متقاربة لمساحتي')">➕ مساحة متقاربة لمساحتي</button>
+                        <button type="button" class="tag-pill-smart tag-pill-des" data-target="desired" data-note="فيو بحري مفتوح" onclick="appendNote('reg-desired-notes', 'فيو بحري مفتوح')">➕ فيو بحري مفتوح</button>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div class="grid-2" style="gap: 1rem;">
-                  <div>
-                    <label style="font-size: 0.84rem; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 4px;">
-                      <span>🎯</span>
-                      <span>المواصفات المرغوبة (ما أبحث عنه):</span>
-                    </label>
-                    <textarea id="reg-desired-notes" class="form-control" rows="3" placeholder="مثال: أرغب في R3 أو R5، مساحة من 140 إلى 160م²، أدوار متكررة (ثاني إلى خامس)، فيو بحري مفتوح، مجاورة محددة..." style="font-size: 0.85rem; line-height: 1.4;"></textarea>
-                    <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px;">
-                      <span class="tag-pill" onclick="appendNote('reg-desired-notes', 'مطلوب الحي R3')">➕ R3</span>
-                      <span class="tag-pill" onclick="appendNote('reg-desired-notes', 'مطلوب جاردن سيتي R5')">➕ R5</span>
-                      <span class="tag-pill" onclick="appendNote('reg-desired-notes', 'مساحة 140 - 160م²')">➕ 140-160م²</span>
-                      <span class="tag-pill" onclick="appendNote('reg-desired-notes', 'دور متكرر (2 - 5)')">➕ دور متكرر</span>
-                      <span class="tag-pill" onclick="appendNote('reg-desired-notes', 'فيو بحري مفتوح')">➕ بحري</span>
+                  <!-- Card 2: Undesired Specifications -->
+                  <div style="background: #ffffff; border: 1.5px solid #fca5a5; border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                    <div>
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+                        <label for="reg-undesired-notes" style="font-size: 0.88rem; font-weight: 800; color: #991b1b; display: flex; align-items: center; gap: 0.35rem; margin: 0;">
+                          <span>⛔</span>
+                          <span>المواصفات المرفوضة (ما لا أرغب به تماماً):</span>
+                        </label>
+                        <span style="font-size: 0.72rem; color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 2px 7px; border-radius: 10px; font-weight: 600;">🛑 موانع قطعية</span>
+                      </div>
+                      <textarea id="reg-undesired-notes" class="form-control" rows="3" placeholder="مثال: أرفض الدور الأرضي، أرفض الدور الأخير، لا أرغب في R5، مساحات أقل من 135م²..." style="font-size: 0.85rem; line-height: 1.45; border-color: #fca5a5;" oninput="onNotesInput()"></textarea>
                     </div>
-                  </div>
 
-                  <div>
-                    <label style="font-size: 0.84rem; font-weight: 800; color: #991b1b; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 4px;">
-                      <span>⛔</span>
-                      <span>المواصفات المرفوضة (ما لا أرغب به تماماً):</span>
-                    </label>
-                    <textarea id="reg-undesired-notes" class="form-control" rows="3" placeholder="مثال: أرفض الدور الأرضي، أرفض الدور الأخير، لا أرغب في مساحة أقل من 130م²، أرفض القرب من الخدمات..." style="font-size: 0.85rem; line-height: 1.4;"></textarea>
-                    <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px;">
-                      <span class="tag-pill tag-pill-danger" onclick="appendNote('reg-undesired-notes', 'أرفض الدور الأرضي')">⛔ أرفض الأرضي</span>
-                      <span class="tag-pill tag-pill-danger" onclick="appendNote('reg-undesired-notes', 'أرفض الدور الأخير')">⛔ أرفض الأخير</span>
-                      <span class="tag-pill tag-pill-danger" onclick="appendNote('reg-undesired-notes', 'أرفض مساحات أقل من 135م²')">⛔ أقل من 135م²</span>
-                      <span class="tag-pill tag-pill-danger" onclick="appendNote('reg-undesired-notes', 'لا أرغب في R5')">⛔ لا أرغب بـ R5</span>
+                    <div style="margin-top: 0.65rem;">
+                      <div style="font-size: 0.75rem; font-weight: 700; color: #991b1b; margin-bottom: 0.35rem;">
+                        👇 موانع سريعة بنقرة زر (تستبعد الشقق المخالفة تلقائياً):
+                      </div>
+                      <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button type="button" class="tag-pill-smart tag-pill-undes" data-target="undesired" data-note="أرفض الدور الأرضي" onclick="appendNote('reg-undesired-notes', 'أرفض الدور الأرضي')">⛔ أرفض الدور الأرضي</button>
+                        <button type="button" class="tag-pill-smart tag-pill-undes" data-target="undesired" data-note="أرفض الدور الأخير" onclick="appendNote('reg-undesired-notes', 'أرفض الدور الأخير')">⛔ أرفض الدور الأخير</button>
+                        <button type="button" class="tag-pill-smart tag-pill-undes" data-target="undesired" data-note="لا أرغب في R5" onclick="appendNote('reg-undesired-notes', 'لا أرغب في R5')">⛔ لا أرغب في R5</button>
+                        <button type="button" class="tag-pill-smart tag-pill-undes" data-target="undesired" data-note="لا أرغب في R3" onclick="appendNote('reg-undesired-notes', 'لا أرغب في R3')">⛔ لا أرغب في R3</button>
+                        <button type="button" class="tag-pill-smart tag-pill-undes" data-target="undesired" data-note="مساحات أقل من 135م²" onclick="appendNote('reg-undesired-notes', 'مساحات أقل من 135م²')">⛔ مساحات أقل من 135م²</button>
+                        <button type="button" class="tag-pill-smart tag-pill-undes" data-target="undesired" data-note="مساحات أقل من مساحتي" onclick="appendNote('reg-undesired-notes', 'مساحات أقل من مساحتي')">⛔ مساحات أقل من مساحتي</button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-<div class="decision-choice-3" id="choice-status-agreed" onclick="setSwapStatus('AGREED_DIRECT')">
+              <div class="decision-choice-3" id="choice-status-agreed" onclick="setSwapStatus('AGREED_DIRECT')">
                 <input type="radio" name="swap-status-radio" value="AGREED_DIRECT" style="margin-top: 4px;">
                 <div>
                   <div style="font-weight: 800; color: #b45309; font-size: 0.95rem;">

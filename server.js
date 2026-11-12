@@ -131,7 +131,14 @@ const server = http.createServer(async (req, res) => {
       if (!q) {
         return sendJson(res, 400, { success: false, message: "يرجى تحديد الرقم القومي للموظف" });
       }
-      const recs = db.getSmartRecommendations(q);
+      const overrides = {};
+      if (parsedUrl.query && parsedUrl.query.desired !== undefined) {
+        overrides.swap_desired_notes = parsedUrl.query.desired;
+      }
+      if (parsedUrl.query && parsedUrl.query.undesired !== undefined) {
+        overrides.swap_undesired_notes = parsedUrl.query.undesired;
+      }
+      const recs = db.getSmartRecommendations(q, overrides);
       return sendJson(res, 200, recs);
     }
 
