@@ -816,30 +816,50 @@ function filterPickerApts() {
 
 function addPreference(aptId) {
   if (state.preferences.length >= 20) {
-    showToast("وصلت للحد الأقصى (20 رغبة)", "error");
-    return;
+    showToast("أنت وصلت للحد الأقصى لإدخال الرغبات (20 رغبة)، برجاء حذف رغبة أو أكثر لإدخال رغبات جديدة ⚠️", "warning");
+    return false;
   }
   if (Number(aptId) === Number(state.selectedAptId)) {
     showToast("لا يمكنك اختيار شقتك الأصلية ضمن رغبات التبديل!", "error");
-    return;
+    return false;
+  }
+  if (state.preferences.some(p => Number(p.id || p.apartment_id) === Number(aptId))) {
+    showToast("هذه الشقة مضافة بالفعل في قائمة رغباتك!", "info");
+    return false;
   }
   const apt = state.apartments.find(a => a.id === Number(aptId));
-  if (!apt) return;
+  if (!apt) return false;
 
   if (!apt.owner_name || apt.owner_swap_status !== 'WANTS_SWAP') {
     showToast("عذراً، هذه الشقة غير متاحة للتبادل (صاحبها لم يسجل بعد أو اختار الاحتفاظ بها أو تم توافقه الودي)", "error");
-    return;
+    return false;
   }
 
   state.preferences.push(apt);
   renderPreferencesList();
   filterPickerApts();
+  renderCatalog();
+  if (state.smartRecommendations) {
+    renderSmartRecommendationsGrid(state.smartRecommendations);
+  }
+
+  if (state.preferences.length === 20) {
+    showToast("وصلت للحد الأقصى المسموح به (20 رغبة) بنجاح 🎯", "info");
+  } else {
+    showToast(`تمت إضافة الشقة لرغباتك (${state.preferences.length} / 20) ⭐`, "success");
+  }
+  return true;
 }
 
 function removePreference(index) {
   state.preferences.splice(index, 1);
   renderPreferencesList();
   filterPickerApts();
+  renderCatalog();
+  if (state.smartRecommendations) {
+    renderSmartRecommendationsGrid(state.smartRecommendations);
+  }
+  showToast("تم حذف الشقة وعادت للظهور بالكتالوج والترشيحات ↩️", "info");
 }
 
 function movePreference(index, direction) {
@@ -855,6 +875,11 @@ function clearAllPreferences() {
   state.preferences = [];
   renderPreferencesList();
   filterPickerApts();
+  renderCatalog();
+  if (state.smartRecommendations) {
+    renderSmartRecommendationsGrid(state.smartRecommendations);
+  }
+  showToast("تم مسح كافة الرغبات", "info");
 }
 
 function renderPreferencesList() {
@@ -1195,7 +1220,12 @@ function renderCatalog() {
   if (!grid) return;
   const query = state.catalogQuery;
 
+  const selectedPrefIds = new Set((state.preferences || []).map(p => Number(p.id || p.apartment_id)));
+  if (state.selectedAptId) selectedPrefIds.add(Number(state.selectedAptId));
+
   let filtered = state.apartments.filter(a => {
+    // Hide apartments already added to user's preferences or user's own apartment
+    if (selectedPrefIds.has(Number(a.id))) return false;
     if (state.catalogDistrict !== 'all' && a.district !== state.catalogDistrict) return false;
     if (state.catalogNeighborhood && a.neighborhood !== state.catalogNeighborhood) return false;
     if (state.catalogArea && !checkAreaBracketMatch(a, state.catalogArea)) return false;
@@ -1378,8 +1408,6 @@ function renderCatalog() {
 
 function addPreferenceFromCatalog(aptId) {
   addPreference(aptId);
-  renderCatalog();
-  showToast("تمت إضافة الشقة لقائمة رغباتك", "success");
 }
 
 // =========================================================
@@ -1901,6 +1929,7 @@ async function lookupExistingUserPreferences(silent = false) {
 
       renderPreferencesList();
       filterPickerApts();
+      renderCatalog();
       renderPhase1SavedPreferences(state.preferences);
       applyDirectSwapLock(u);
       showToast(`مرحباً أستاذ ${u.full_name}! تم استرجاع بياناتك وشقتك و (${u.preferences.length}) رغبة مسجلة بنجاح.` + (u.isDirectSwapLocked ? " 🔒 (توافق ثنائي معتمد ومقفل)" : ""), "success");
@@ -3114,7 +3143,23 @@ function renderSmartRecommendationsGrid(recs) {
   const grid = document.getElementById("smart-recommendations-grid");
   if (!grid) return;
 
-  grid.innerHTML = recs.map((r, idx) => {
+  const prefIds = new Set((state.preferences || []).map(p => Number(p.id || p.apartment_id)));
+  const visibleRecs = (recs || []).filter(r => !prefIds.has(Number(r.apartment.id)));
+
+  if (visibleRecs.length === 0 && recs && recs.length > 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1/-1; background: #f0fdf4; border: 1.5px dashed #86efac; border-radius: 10px; padding: 2rem; text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 0.4rem;">🎉</div>
+        <div style="font-weight: 800; color: #166534; font-size: 1.05rem;">لقد قمت بإضافة جميع الشقق المرشحة بنجاح إلى قائمة رغباتك!</div>
+        <div style="font-size: 0.85rem; color: #475569; margin-top: 0.35rem;">
+          الشقق المضافة محفوظة في جدول الرغبات بالأعلى، وفي حال قمت بحذف أي شقة ستعود للظهور هنا تلقائياً.
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = visibleRecs.map((r, idx) => {
     const apt = r.apartment;
     const isMutual = r.isMutualMatch;
     const distBadge = apt.district === 'R3' ? '<span class="badge-r3">الحي R3</span>' : '<span class="badge-r5">جاردن سيتي R5</span>';
@@ -3227,7 +3272,6 @@ function renderSmartRecommendationsGrid(recs) {
 
 function addPreferenceFromRec(aptId) {
   addPreference(aptId);
-  showToast("تمت إضافة الشقة المرشحة لقائمة رغباتك بنجاح ⭐", "success");
 }
 
 function requestDirectSwapFromRec(candNid, candName) {
