@@ -3380,21 +3380,3 @@ function fallbackCopyText(textarea) {
   document.execCommand('copy');
   showToast("تم نسخ نص الإعلان بنجاح! 📋", "success");
 }
-
-let showingOnlyNewMatches = false;
-function toggleFilterNewMatchesOnly() {
-  const btn = document.getElementById("btn-filter-new-recs");
-  if (!state.smartRecommendations) return;
-
-  showingOnlyNewMatches = !showingOnlyNewMatches;
-  if (showingOnlyNewMatches) {
-    const filtered = state.smartRecommendations.filter(r => r.isNewMatch);
-    renderSmartRecommendationsGrid(filtered);
-    if (btn) btn.textContent = "⬅️ عرض كل الترشيحات";
-    showToast(`تم تصفية العرض لإظهار ${filtered.length} شقق جديدة فقط ⭐`, "info");
-  } else {
-    renderSmartRecommendationsGrid(state.smartRecommendations);
-    if (btn) btn.textContent = `✨ عرض الشقق الجديدة فقط (${state.newMatches ? state.newMatches.length : 0})`;
-    showToast("تم استعادة عرض كافة الترشيحات", "info");
-  }
-}
