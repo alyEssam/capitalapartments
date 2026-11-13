@@ -3284,7 +3284,7 @@ function reopenRecommendationsSection() {
 
 
 // =========================================================
-// SHARE APARTMENT ON WHATSAPP & TELEGRAM
+// SHARE APARTMENT ON WHATSAPP
 // =========================================================
 function generateApartmentShareText() {
   const name = document.getElementById("reg-name")?.value.trim() || state.currentUser?.full_name || "زميل موظف";
@@ -3344,11 +3344,9 @@ function openShareApartmentModal() {
   const modal = document.getElementById("share-apartment-modal");
   const textarea = document.getElementById("share-ad-text");
   const btnWa = document.getElementById("btn-share-whatsapp");
-  const btnTg = document.getElementById("btn-share-telegram");
 
   if (textarea) textarea.value = data.text;
   if (btnWa) btnWa.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(data.text)}`;
-  if (btnTg) btnTg.href = `https://t.me/share/url?url=${encodeURIComponent(data.siteUrl)}&text=${encodeURIComponent(data.text)}`;
 
   if (modal) {
     modal.style.display = "flex";
@@ -3366,7 +3364,7 @@ function copyShareText() {
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(textarea.value).then(() => {
-      showToast("تم نسخ نص الإعلان بنجاح! يمكنك لصقه الآن في أي جروب واتساب أو تليجرام أو فيسبوك 📋", "success");
+      showToast("تم نسخ نص الإعلان بنجاح! يمكنك لصقه الآن في أي محادثة أو جروب واتساب 📋", "success");
     }).catch(() => {
       fallbackCopyText(textarea);
     });

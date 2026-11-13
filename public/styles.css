@@ -1065,20 +1065,6 @@ body {
 
 
 
-/* Telegram button style */
-.btn-telegram {
-  background: #0088cc;
-  color: white;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
-  border: none;
-  text-decoration: none;
-}
-.btn-telegram:hover {
-  background: #0077b5;
-  color: white;
-  transform: translateY(-1px);
-}
 
 /* New Match Alert Banner & Badges */
 .new-match-alert-banner {
