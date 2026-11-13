@@ -3164,6 +3164,23 @@ function renderSmartRecommendationsGrid(recs) {
             ` : ''}
           </div>
 
+          <!-- Mismatch Notification Box (when not mutual) -->
+          ${(!isMutual && r.mismatchReasons && r.mismatchReasons.length > 0) ? `
+            <div style="background: #fffbeb; border: 1.5px solid #fef08a; border-radius: 8px; padding: 0.6rem 0.75rem; margin: 0.5rem 0; font-size: 0.77rem;">
+              <div style="font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 5px; margin-bottom: 3px;">
+                <span>ℹ️</span>
+                <span>الشقة تناسبك أنت، ولكن بالنسبة للزميل الآخر:</span>
+              </div>
+              <ul style="margin: 0; padding-right: 1.1rem; color: #78350f; line-height: 1.45;">
+                ${r.mismatchReasons.map(m => `<li>${escapeHtml(m)}</li>`).join('')}
+              </ul>
+              <div style="margin-top: 5px; color: #166534; font-weight: 700; font-size: 0.75rem; border-top: 1px dashed #fde68a; padding-top: 4px; display: flex; align-items: center; gap: 4px;">
+                <span>💡</span>
+                <span>${escapeHtml(r.mismatchAdvice || 'ولكن لا مانع من تجربة إرسالها للزميل، يمكن يغير رأيه!')}</span>
+              </div>
+            </div>
+          ` : ''}
+
           <!-- Owner box -->
           <div style="background: ${isMutual ? '#f0fdf4' : '#f8fafc'}; border: 1px solid ${isMutual ? '#bbf7d0' : '#e2e8f0'}; border-radius: 8px; padding: 0.6rem 0.75rem; margin: 0.6rem 0; font-size: 0.8rem;">
             <div style="font-weight: 800; color: #1e3a8a; display: flex; justify-content: space-between; align-items: center;">
