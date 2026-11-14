@@ -818,6 +818,18 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    
+    // 9d. Admin: Advanced Analytics (Supply & Demand breakdown)
+    if (pathname === "/api/admin/analytics" && method === "GET") {
+      try {
+        const analytics = db.getAdvancedAnalytics();
+        return sendJson(res, 200, { success: true, analytics });
+      } catch (err) {
+        console.error("Analytics error:", err);
+        return sendJson(res, 500, { success: false, message: err.message });
+      }
+    }
+
     if (pathname === "/api/admin/users" && method === "GET") {
       const users = db.getAllUsers();
       return sendJson(res, 200, { success: true, users });

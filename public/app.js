@@ -2266,6 +2266,7 @@ function renderRegisteredUsersTableRows() {
 async function loadAdminData() {
   await loadStats();
   await loadAllRegisteredUsers();
+  loadAdvancedAnalytics();
   loadDirectSwapsTable();
 
   // Automatically load previously saved/committed matching run if available
@@ -3856,5 +3857,343 @@ async function submitEditUserForm(event) {
     }
   } catch (err) {
     showToast("حدث خطأ أثناء حفظ التعديلات", "error");
+  }
+}
+
+
+// ==========================================
+// ADVANCED ANALYTICS LOGIC
+// ==========================================
+let currentAnalyticsData = null;
+
+async function loadAdvancedAnalytics() {
+  try {
+    const res = await fetch("/api/admin/analytics");
+    const data = await res.json();
+    if (!data.success || !data.analytics) return;
+
+    currentAnalyticsData = data.analytics;
+    renderAnalyticsViews(data.analytics);
+  } catch(err) {
+    console.error("loadAdvancedAnalytics error:", err);
+  }
+}
+
+function switchAnalyticsTab(tabName) {
+  document.querySelectorAll('.analytics-pane').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('#admin-dashboard-view .active-analytics-tab').forEach(el => el.classList.remove('active-analytics-tab'));
+
+  const pane = document.getElementById("atab-pane-" + tabName);
+  if (pane) pane.style.display = 'block';
+
+  const btn = document.getElementById("atab-btn-" + tabName);
+  if (btn) btn.classList.add('active-analytics-tab');
+}
+
+function renderAnalyticsViews(a) {
+  // 1. Render Top Insight Boxes
+  const r3Reg = (a.registeredByDistrict.find(d => d.district === 'R3') || { count: 0 }).count;
+  const r5Reg = (a.registeredByDistrict.find(d => d.district === 'R5') || { count: 0 }).count;
+  const totalReg = r3Reg + r5Reg || 1;
+
+  const r3Pref = (a.preferencesByDistrict.find(d => d.district === 'R3') || { count: 0, rank1_count: 0 });
+  const r5Pref = (a.preferencesByDistrict.find(d => d.district === 'R5') || { count: 0, rank1_count: 0 });
+  const totalPref = r3Pref.count + r5Pref.count || 1;
+
+  const r3RegPct = Math.round((r3Reg / totalReg) * 100);
+  const r5RegPct = Math.round((r5Reg / totalReg) * 100);
+  const r3PrefPct = Math.round((r3Pref.count / totalPref) * 100);
+  const r5PrefPct = Math.round((r5Pref.count / totalPref) * 100);
+
+  const distBox = document.getElementById("insight-district-box");
+  if (distBox) {
+    distBox.innerHTML = `
+      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+        <span><strong>الحي R3:</strong> مسجل ${r3Reg} (${r3RegPct}%)</span>
+        <span style="color: #2563eb; font-weight: 800;">مطلوب ${r3Pref.count} (${r3PrefPct}%) 📈</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span><strong>الحي R5:</strong> مسجل ${r5Reg} (${r5RegPct}%)</span>
+        <span style="color: #16a34a; font-weight: 800;">مطلوب ${r5Pref.count} (${r5PrefPct}%) 📉</span>
+      </div>
+      <div style="font-size: 0.75rem; color: #b45309; background: #fef3c7; padding: 3px 6px; border-radius: 4px; font-weight: 700;">
+        💡 الطلب على R3 يعادل ${(r3Pref.count / (r5Pref.count || 1)).toFixed(1)} ضعف الطلب على R5!
+      </div>
+    `;
+  }
+
+  const floorsBox = document.getElementById("insight-floors-box");
+  if (floorsBox) {
+    const totalFlReg = a.registeredFloors.ground + a.registeredFloors.repeated + a.registeredFloors.last || 1;
+    const totalFlPref = a.preferencesFloors.ground + a.preferencesFloors.repeated + a.preferencesFloors.last || 1;
+
+    const repRegPct = Math.round((a.registeredFloors.repeated / totalFlReg) * 100);
+    const repPrefPct = Math.round((a.preferencesFloors.repeated / totalFlPref) * 100);
+    const gndPrefPct = Math.round((a.preferencesFloors.ground / totalFlPref) * 100);
+
+    floorsBox.innerHTML = `
+      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+        <span><strong>الأدوار المتكررة:</strong></span>
+        <span style="color: #166534; font-weight: 800;">${a.preferencesFloors.repeated} رغبة (${repPrefPct}%) 🎯</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span><strong>الدور الأرضي:</strong></span>
+        <span style="color: #b91c1c; font-weight: 700;">${a.preferencesFloors.ground} رغبة فقط (${gndPrefPct}%) 📉</span>
+      </div>
+      <div style="font-size: 0.75rem; color: #1e3a8a; background: #eff6ff; padding: 3px 6px; border-radius: 4px; font-weight: 700;">
+        💡 الأدوار المتكررة تحظى بأعلى توافق (${repPrefPct}% من إجمالي الرغبات).
+      </div>
+    `;
+  }
+
+  const areasBox = document.getElementById("insight-areas-box");
+  if (areasBox) {
+    const topAreaPref = a.preferencesByArea[0] || { bracket: '-', count: 0 };
+    const totalAreaPref = a.preferencesByArea.reduce((s, x) => s + x.count, 0) || 1;
+    const topAreaPct = Math.round((topAreaPref.count / totalAreaPref) * 100);
+
+    areasBox.innerHTML = `
+      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+        <span><strong>الفئة الأكثر طلباً:</strong></span>
+        <span style="color: #2563eb; font-weight: 800;">${topAreaPref.bracket}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span><strong>عدد الرغبات:</strong></span>
+        <span style="color: #16a34a; font-weight: 800;">${topAreaPref.count} رغبة (${topAreaPct}%) 🔥</span>
+      </div>
+      <div style="font-size: 0.75rem; color: #166534; background: #f0fdf4; padding: 3px 6px; border-radius: 4px; font-weight: 700;">
+        💡 مساحات (136 - 155 م²) تستحوذ على أكثر من نصف الرغبات!
+      </div>
+    `;
+  }
+
+  // 2. Render Districts Tab
+  const distContainer = document.getElementById("analytics-districts-container");
+  if (distContainer) {
+    distContainer.innerHTML = `
+      <!-- R3 Bar -->
+      <div style="margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.88rem; margin-bottom: 4px;">
+          <span style="color: #1e3a8a;">الحي الثالث R3 (العاصمة الإدارية)</span>
+          <span style="color: #2563eb;">الطلب: ${r3Pref.count} رغبة (${r3PrefPct}%) | المعروض: ${r3Reg} شقة (${r3RegPct}%)</span>
+        </div>
+        <div style="background: #e2e8f0; border-radius: 8px; height: 18px; overflow: hidden; display: flex; margin-bottom: 3px;">
+          <div style="background: #2563eb; width: ${r3PrefPct}%; height: 100%;" title="نسبة الطلب: ${r3PrefPct}%"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b;">
+          <span>الرغبة الأولى: <strong>${r3Pref.rank1_count} موظفاً</strong></span>
+          <span style="color: #b45309; font-weight: 700;">نسبة التزاحم: ${(r3Pref.count / (r3Reg || 1)).toFixed(1)} طلب / شقة</span>
+        </div>
+      </div>
+
+      <!-- R5 Bar -->
+      <div>
+        <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.88rem; margin-bottom: 4px;">
+          <span style="color: #1e3a8a;">الحي الخامس R5 (جاردينيا سيتي)</span>
+          <span style="color: #16a34a;">الطلب: ${r5Pref.count} رغبة (${r5PrefPct}%) | المعروض: ${r5Reg} شقة (${r5RegPct}%)</span>
+        </div>
+        <div style="background: #e2e8f0; border-radius: 8px; height: 18px; overflow: hidden; display: flex; margin-bottom: 3px;">
+          <div style="background: #16a34a; width: ${r5PrefPct}%; height: 100%;" title="نسبة الطلب: ${r5PrefPct}%"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b;">
+          <span>الرغبة الأولى: <strong>${r5Pref.rank1_count} موظفاً</strong></span>
+          <span style="color: #15803d; font-weight: 700;">نسبة التزاحم: ${(r5Pref.count / (r5Reg || 1)).toFixed(1)} طلب / شقة</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // Neighborhoods Table
+  const neighContainer = document.getElementById("analytics-neighborhoods-container");
+  if (neighContainer) {
+    const combinedNeighMap = new Map();
+    a.registeredByNeighborhood.forEach(n => {
+      const key = n.district + '-' + n.neighborhood;
+      combinedNeighMap.set(key, { district: n.district, neighborhood: n.neighborhood, regCount: n.count, prefCount: 0, rank1: 0 });
+    });
+    a.preferencesByNeighborhood.forEach(n => {
+      const key = n.district + '-' + n.neighborhood;
+      if (!combinedNeighMap.has(key)) {
+        combinedNeighMap.set(key, { district: n.district, neighborhood: n.neighborhood, regCount: 0, prefCount: n.count, rank1: n.rank1_count });
+      } else {
+        const obj = combinedNeighMap.get(key);
+        obj.prefCount = n.count;
+        obj.rank1 = n.rank1_count;
+      }
+    });
+
+    const neighList = Array.from(combinedNeighMap.values()).sort((x, y) => y.prefCount - x.prefCount);
+
+    neighContainer.innerHTML = `
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: right;">
+        <thead>
+          <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+            <th style="padding: 6px;">الحي</th>
+            <th style="padding: 6px;">المجاورة</th>
+            <th style="padding: 6px; text-align: center;">الشقق المسجلة</th>
+            <th style="padding: 6px; text-align: center;">الرغبات المطلوبة</th>
+            <th style="padding: 6px; text-align: center;">الرغبة الأولى</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${neighList.map(n => `
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 5px; font-weight: 700; color: #1e3a8a;">${n.district}</td>
+              <td style="padding: 5px;">مجاورة ${n.neighborhood}</td>
+              <td style="padding: 5px; text-align: center; color: #475569;">${n.regCount}</td>
+              <td style="padding: 5px; text-align: center; font-weight: 800; color: #2563eb;">${n.prefCount}</td>
+              <td style="padding: 5px; text-align: center; color: #d97706; font-weight: 700;">${n.rank1}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // 3. Render Floors Tab
+  const floorsContainer = document.getElementById("analytics-floors-container");
+  if (floorsContainer) {
+    const totalFlReg = a.registeredFloors.ground + a.registeredFloors.repeated + a.registeredFloors.last || 1;
+    const totalFlPref = a.preferencesFloors.ground + a.preferencesFloors.repeated + a.preferencesFloors.last || 1;
+
+    const floorCats = [
+      { name: 'أدوار متكررة (الأدوار الوسطى)', reg: a.registeredFloors.repeated, pref: a.preferencesFloors.repeated, color: '#16a34a' },
+      { name: 'الدور الأخير (سطح العمارة)', reg: a.registeredFloors.last, pref: a.preferencesFloors.last, color: '#d97706' },
+      { name: 'الدور الأرضي', reg: a.registeredFloors.ground, pref: a.preferencesFloors.ground, color: '#dc2626' }
+    ];
+
+    floorsContainer.innerHTML = floorCats.map(fc => {
+      const regPct = Math.round((fc.reg / totalFlReg) * 100);
+      const prefPct = Math.round((fc.pref / totalFlPref) * 100);
+      return `
+        <div style="margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.88rem; margin-bottom: 4px;">
+            <span style="color: #0f172a;">${fc.name}</span>
+            <span style="color: ${fc.color};">الطلب: ${fc.pref} (${prefPct}%) | المعروض: ${fc.reg} (${regPct}%)</span>
+          </div>
+          <div style="background: #e2e8f0; border-radius: 8px; height: 16px; overflow: hidden; display: flex;">
+            <div style="background: ${fc.color}; width: ${prefPct}%; height: 100%;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 4. Render Areas Tab
+  const areasContainer = document.getElementById("analytics-areas-container");
+  if (areasContainer) {
+    const totalAreaPref = a.preferencesByArea.reduce((s, x) => s + x.count, 0) || 1;
+    const totalAreaReg = a.registeredByArea.reduce((s, x) => s + x.count, 0) || 1;
+
+    areasContainer.innerHTML = a.preferencesByArea.map(ab => {
+      const regItem = a.registeredByArea.find(r => r.bracket === ab.bracket) || { count: 0 };
+      const prefPct = Math.round((ab.count / totalAreaPref) * 100);
+      const regPct = Math.round((regItem.count / totalAreaReg) * 100);
+
+      return `
+        <div style="margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.88rem; margin-bottom: 4px;">
+            <span style="color: #1e3a8a;">${ab.bracket}</span>
+            <span style="color: #2563eb;">الطلب: ${ab.count} رغبة (${prefPct}%) | المعروض: ${regItem.count} (${regPct}%)</span>
+          </div>
+          <div style="background: #e2e8f0; border-radius: 8px; height: 16px; overflow: hidden; display: flex; margin-bottom: 3px;">
+            <div style="background: #3b82f6; width: ${prefPct}%; height: 100%;"></div>
+          </div>
+          <div style="font-size: 0.75rem; color: #64748b; text-align: left;">
+            رغبة أولى: <strong>${ab.rank1_count} موظفاً</strong>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 5. Render Buildings Tab
+  const bldPrefContainer = document.getElementById("analytics-buildings-pref-container");
+  if (bldPrefContainer) {
+    bldPrefContainer.innerHTML = `
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: right;">
+        <thead>
+          <tr style="background: #eff6ff; border-bottom: 2px solid #bfdbfe;">
+            <th style="padding: 6px;">#</th>
+            <th style="padding: 6px;">الحي</th>
+            <th style="padding: 6px;">رقم العمارة</th>
+            <th style="padding: 6px; text-align: center;">إجمالي الطلبات</th>
+            <th style="padding: 6px; text-align: center;">رغبة أولى</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${a.topBuildingsPreferences.map((b, idx) => `
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 5px; color: #64748b;">${idx + 1}</td>
+              <td style="padding: 5px; font-weight: 700; color: #1e3a8a;">${b.district}</td>
+              <td style="padding: 5px; font-weight: 800;">عمارة ${b.building}</td>
+              <td style="padding: 5px; text-align: center; font-weight: 800; color: #2563eb;">${b.count} طلب</td>
+              <td style="padding: 5px; text-align: center; font-weight: 700; color: #d97706;">${b.rank1_count}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  const bldRegContainer = document.getElementById("analytics-buildings-reg-container");
+  if (bldRegContainer) {
+    bldRegContainer.innerHTML = `
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: right;">
+        <thead>
+          <tr style="background: #f0fdf4; border-bottom: 2px solid #bbf7d0;">
+            <th style="padding: 6px;">#</th>
+            <th style="padding: 6px;">الحي</th>
+            <th style="padding: 6px;">رقم العمارة</th>
+            <th style="padding: 6px; text-align: center;">الشقق المسجلة</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${a.topBuildingsRegistered.map((b, idx) => `
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 5px; color: #64748b;">${idx + 1}</td>
+              <td style="padding: 5px; font-weight: 700; color: #166534;">${b.district}</td>
+              <td style="padding: 5px; font-weight: 800;">عمارة ${b.building}</td>
+              <td style="padding: 5px; text-align: center; font-weight: 800; color: #15803d;">${b.count} شقة</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // 6. Render Top Most Wanted Units
+  const wantedContainer = document.getElementById("analytics-wanted-container");
+  if (wantedContainer) {
+    wantedContainer.innerHTML = `
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: right;">
+        <thead>
+          <tr style="background: #fefce8; border-bottom: 2px solid #fef08a;">
+            <th style="padding: 6px; text-align: center;">الترتيب</th>
+            <th style="padding: 6px;">كود الشقة</th>
+            <th style="padding: 6px;">الحي والعمارة</th>
+            <th style="padding: 6px;">الوحدة والدور</th>
+            <th style="padding: 6px;">المساحة والنموذج</th>
+            <th style="padding: 6px;">الرقم العقاري</th>
+            <th style="padding: 6px; text-align: center;">إجمالي الرغبات</th>
+            <th style="padding: 6px; text-align: center;">اختيار أول (رغبة 1)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${a.topWantedApartments.map((w, idx) => `
+            <tr style="border-bottom: 1px solid #fef9c3; ${idx === 0 ? 'background: #fffbeb;' : ''}">
+              <td style="padding: 6px; text-align: center; font-weight: 800; color: #b45309;">${idx === 0 ? '👑 #1' : '#' + (idx + 1)}</td>
+              <td style="padding: 6px; font-family: monospace; font-size: 0.78rem; font-weight: 700; color: #1e3a8a;">${w.code}</td>
+              <td style="padding: 6px;"><strong>${w.district}</strong> - مجاورة ${w.neighborhood} - عمارة <strong>${w.building}</strong></td>
+              <td style="padding: 6px;">وحدة <strong>${w.unit_number}</strong> (${w.floor_label})</td>
+              <td style="padding: 6px;">نموذج ${w.model} (${w.area}م²)</td>
+              <td style="padding: 6px; font-family: monospace; font-size: 0.75rem; color: #64748b;">${w.national_property_id}</td>
+              <td style="padding: 6px; text-align: center; font-weight: 800; color: #2563eb; font-size: 0.95rem;">${w.request_count}</td>
+              <td style="padding: 6px; text-align: center; font-weight: 800; color: #d97706; font-size: 0.95rem;">${w.rank1_count}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
   }
 }

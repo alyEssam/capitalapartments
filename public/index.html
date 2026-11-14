@@ -748,6 +748,211 @@
         </div>
 
                 <!-- ======================================================== -->
+        
+        <!-- ======================================================== -->
+        <!-- ADVANCED ANALYTICS: SUPPLY & DEMAND BREAKDOWN -->
+        <!-- ======================================================== -->
+        <div class="card" style="border: 2px solid #8b5cf6; background: white; margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+          <div class="card-header" style="border-bottom: 1px solid #ddd6fe; background: #faf5ff; padding: 1rem 1.25rem;">
+            <div>
+              <h3 class="card-title" style="color: #6b21a8; display: flex; align-items: center; gap: 0.5rem; font-size: 1.15rem;">
+                <span>📊</span>
+                <span>مركز التحليلات المتقدمة وإحصائيات العرض والطلب (الأحياء، العمارات، الأدوار، والمساحات)</span>
+              </h3>
+              <p style="font-size: 0.85rem; color: #581c87; margin: 0.25rem 0 0;">
+                مقارنة تفصيلية بين الشقق المسجلة الفائز بها الموظفون (المعروض في التبديل) ورغبات الموظفين المسجلة (الطلب الفعلي).
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="loadAdvancedAnalytics()" style="border-color: #c084fc; color: #7e22ce;">🔄 تحديث الإحصائيات</button>
+            </div>
+          </div>
+
+          <div style="padding: 1.25rem;">
+            
+            <!-- Quick Key Insights Comparison Cards -->
+            <div class="grid-3" style="gap: 1rem; margin-bottom: 1.5rem;">
+              
+              <!-- District Balance Insight -->
+              <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 1rem;">
+                <div style="font-weight: 800; color: #1e3a8a; font-size: 0.92rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                  <span>🏢 مؤشر التزاحم بين الأحياء</span>
+                  <span style="font-size: 0.78rem; background: #eff6ff; color: #2563eb; padding: 2px 8px; border-radius: 10px;">R3 مقابل R5</span>
+                </div>
+                <div style="font-size: 0.82rem; line-height: 1.6; color: #334155;" id="insight-district-box">
+                  جاري الحساب... ⏳
+                </div>
+              </div>
+
+              <!-- Floor Category Balance Insight -->
+              <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 1rem;">
+                <div style="font-weight: 800; color: #1e3a8a; font-size: 0.92rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                  <span>🪜 مؤشر توزيع الأدوار</span>
+                  <span style="font-size: 0.78rem; background: #fefce8; color: #854d0e; padding: 2px 8px; border-radius: 10px;">أرضي / متكرر / أخير</span>
+                </div>
+                <div style="font-size: 0.82rem; line-height: 1.6; color: #334155;" id="insight-floors-box">
+                  جاري الحساب... ⏳
+                </div>
+              </div>
+
+              <!-- Area Brackets Insight -->
+              <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 1rem;">
+                <div style="font-weight: 800; color: #1e3a8a; font-size: 0.92rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                  <span>📐 مؤشر المساحات الأكثر طلباً</span>
+                  <span style="font-size: 0.78rem; background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 10px;">م²</span>
+                </div>
+                <div style="font-size: 0.82rem; line-height: 1.6; color: #334155;" id="insight-areas-box">
+                  جاري الحساب... ⏳
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Analytics Sub-Tabs -->
+            <div style="display: flex; gap: 0.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-outline btn-sm active-analytics-tab" id="atab-btn-districts" onclick="switchAnalyticsTab('districts')" style="font-size: 0.82rem; font-weight: 700;">
+                🏢 الأحياء والمجاورات
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" id="atab-btn-floors" onclick="switchAnalyticsTab('floors')" style="font-size: 0.82rem; font-weight: 700;">
+                🪜 الأدوار (أرضي / متكرر / أخير)
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" id="atab-btn-areas" onclick="switchAnalyticsTab('areas')" style="font-size: 0.82rem; font-weight: 700;">
+                📐 فئات المساحات (م²)
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" id="atab-btn-buildings" onclick="switchAnalyticsTab('buildings')" style="font-size: 0.82rem; font-weight: 700;">
+                🏛️ العمارات الأكثر طلباً وتسجيلاً
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" id="atab-btn-wanted" onclick="switchAnalyticsTab('wanted')" style="font-size: 0.82rem; font-weight: 700;">
+                ⭐ الشقق الأكثر طلباً بالمنظومة
+              </button>
+            </div>
+
+            <!-- Tab 1: Districts & Neighborhoods Pane -->
+            <div id="atab-pane-districts" class="analytics-pane">
+              <div class="grid-2" style="gap: 1.5rem;">
+                
+                <!-- Districts Comparison -->
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; background: #fafcff;">
+                  <h4 style="font-weight: 800; color: #1e3a8a; margin-bottom: 1rem; font-size: 0.95rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>مقارنة الأحياء: الشقق المسجلة مقابل الرغبات</span>
+                    <span style="font-size: 0.75rem; color: #64748b;">(R3 مقابل R5)</span>
+                  </h4>
+                  <div id="analytics-districts-container">جاري التحميل...</div>
+                </div>
+
+                <!-- Neighborhoods Table -->
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; background: white;">
+                  <h4 style="font-weight: 800; color: #1e3a8a; margin-bottom: 1rem; font-size: 0.95rem;">
+                    تفصيل المجاورات الأكثر إقبالاً
+                  </h4>
+                  <div id="analytics-neighborhoods-container" style="overflow-x: auto; max-height: 280px;">جاري التحميل...</div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Tab 2: Floors Pane -->
+            <div id="atab-pane-floors" class="analytics-pane" style="display: none;">
+              <div class="grid-2" style="gap: 1.5rem;">
+                
+                <!-- Floor Categories Comparison -->
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; background: #fafcff;">
+                  <h4 style="font-weight: 800; color: #1e3a8a; margin-bottom: 1rem; font-size: 0.95rem;">
+                    مقارنة نوع الدور: الشقق المسجلة مقابل الرغبات
+                  </h4>
+                  <div id="analytics-floors-container">جاري التحميل...</div>
+                </div>
+
+                <!-- Floors Notes Guide -->
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; background: white;">
+                  <h4 style="font-weight: 800; color: #1e3a8a; margin-bottom: 0.75rem; font-size: 0.95rem;">
+                    💡 قراءة تحليلية لرغبات الأدوار
+                  </h4>
+                  <div style="font-size: 0.84rem; line-height: 1.7; color: #334155;">
+                    <div style="margin-bottom: 0.6rem; padding-bottom: 0.6rem; border-bottom: 1px dashed #e2e8f0;">
+                      <strong style="color: #166534;">➕ الأدوار المتكررة:</strong> تمثل أكثر من <strong>75%</strong> من إجمالي رغبات الموظفين، وهي أكثر الأدوار سهولة في إيجاد توافقات تبادلية لتطابق العرض والطلب.
+                    </div>
+                    <div style="margin-bottom: 0.6rem; padding-bottom: 0.6rem; border-bottom: 1px dashed #e2e8f0;">
+                      <strong style="color: #b45309;">🔝 الدور الأخير:</strong> عليه طلب ملحوظ (أعلى من المعروض المسجل)، ما يمنح أصحاب الشقق بالأدوار الأخيرة فرص تبادل ممتازة.
+                    </div>
+                    <div>
+                      <strong style="color: #b91c1c;">⛔ الدور الأرضي:</strong> أقل الأدوار طلباً في الرغبات (حوالي 6% فقط)، ويرفضه غالبية المسجلين في خانة المواصفات المرفوضة.
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Tab 3: Area Brackets Pane -->
+            <div id="atab-pane-areas" class="analytics-pane" style="display: none;">
+              <div class="grid-2" style="gap: 1.5rem;">
+                
+                <!-- Areas Comparison Bars -->
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; background: #fafcff;">
+                  <h4 style="font-weight: 800; color: #1e3a8a; margin-bottom: 1rem; font-size: 0.95rem;">
+                    توزيع فئات المساحات: المعروض مقابل المطلوب
+                  </h4>
+                  <div id="analytics-areas-container">جاري التحميل...</div>
+                </div>
+
+                <!-- Area Demand Highlights -->
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; background: white;">
+                  <h4 style="font-weight: 800; color: #1e3a8a; margin-bottom: 0.75rem; font-size: 0.95rem;">
+                    💡 مؤشرات طلب المساحات
+                  </h4>
+                  <div style="font-size: 0.84rem; line-height: 1.7; color: #334155;">
+                    <div style="margin-bottom: 0.6rem; padding-bottom: 0.6rem; border-bottom: 1px dashed #e2e8f0;">
+                      <strong style="color: #2563eb;">🥇 المساحة الأكثر طلباً (136 - 155 م²):</strong> تحصد أكثر من <strong>55%</strong> من إجمالي الرغبات، وأكثر من <strong>60%</strong> من رغبات الاختيار الأول للموظفين (نماذج A6 و C).
+                    </div>
+                    <div>
+                      <strong style="color: #166534;">🥈 المساحات الكبيرة (> 155 م²):</strong> تحصد المرتبة الثانية بحوالي <strong>30%</strong> من الرغبات (نماذج B6 بمساحة 170-173م²).
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Tab 4: Top Buildings Pane -->
+            <div id="atab-pane-buildings" class="analytics-pane" style="display: none;">
+              <div class="grid-2" style="gap: 1.5rem;">
+                
+                <!-- Top Buildings in Preferences -->
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; background: white;">
+                  <h4 style="font-weight: 800; color: #1e3a8a; margin-bottom: 0.75rem; font-size: 0.95rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>🎯 أكثر العمارات طلباً في رغبات الموظفين</span>
+                    <span style="font-size: 0.75rem; color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 10px;">الأكثر تكراراً</span>
+                  </h4>
+                  <div id="analytics-buildings-pref-container" style="overflow-x: auto; max-height: 320px;">جاري التحميل...</div>
+                </div>
+
+                <!-- Top Buildings in Registered Units -->
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; background: white;">
+                  <h4 style="font-weight: 800; color: #1e3a8a; margin-bottom: 0.75rem; font-size: 0.95rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>🏢 أكثر العمارات التي سُجلت شقق منها بالمنظومة</span>
+                    <span style="font-size: 0.75rem; color: #166534; background: #f0fdf4; padding: 2px 8px; border-radius: 10px;">المعروض المسجل</span>
+                  </h4>
+                  <div id="analytics-buildings-reg-container" style="overflow-x: auto; max-height: 320px;">جاري التحميل...</div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Tab 5: Most Wanted Apartments Pane -->
+            <div id="atab-pane-wanted" class="analytics-pane" style="display: none;">
+              <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; background: white;">
+                <h4 style="font-weight: 800; color: #1e3a8a; margin-bottom: 0.75rem; font-size: 0.98rem; display: flex; align-items: center; justify-content: space-between;">
+                  <span>⭐ قائمة الشقق العشر الذهبية الأكثر طلباً واختياراً كرغبة أولى بالمنظومة</span>
+                  <span style="font-size: 0.75rem; background: #fef3c7; color: #b45309; padding: 3px 10px; border-radius: 12px; font-weight: 800;">أعلى نسبة تزاحم</span>
+                </h4>
+                <div id="analytics-wanted-container" style="overflow-x: auto; max-height: 380px;">جاري التحميل...</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         <!-- LIVE ROSTER: ALL REGISTERED EMPLOYEES (132+ USERS) -->
         <!-- ======================================================== -->
         <div class="card" style="border: 2px solid #2563eb; background: white; margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
