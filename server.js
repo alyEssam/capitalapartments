@@ -288,6 +288,36 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      // Priority 2: In Phase 1 or Phase 2 (Preferences collection), official lottery has NOT been drawn yet
+      const systemPhase = db.getSetting("system_phase", "PHASE_1_DIRECT");
+      if (systemPhase !== "PHASE_3_RESULTS") {
+        const userPrefs = db.db.prepare(`
+          SELECT p.rank, a.district, a.building, a.unit_number, a.floor_label, a.area
+          FROM preferences p
+          JOIN apartments a ON p.apartment_id = a.id
+          WHERE p.user_id = ?
+          ORDER BY p.rank ASC
+        `).all(user.id);
+
+        return sendJson(res, 200, {
+          success: true,
+          published: false,
+          inPreferencesPhase: true,
+          systemPhase: systemPhase,
+          prefsCount: userPrefs.length,
+          userPrefs: userPrefs,
+          user: {
+            full_name: user.full_name,
+            national_id: user.national_id,
+            workplace: user.workplace,
+            swap_status: user.swap_status
+          },
+          message: systemPhase === "PHASE_2_PREFERENCES"
+            ? "لم تظهر النتيجة الرسمية للقرعة التبادلية بعد. المنظومة حالياً في (المرحلة الثانية: إدخال وتسجيل الرغبات)، وسيتم إجراء السحب والقرعة الإلكترونية واعتماد النتائج فور إغلاق باب تسجيل الرغبات من قبل لجنة الإسكان."
+            : "لم تظهر النتيجة الرسمية بعد. المنظومة حالياً في (المرحلة الأولى: رصد الشقق والتوافق الودي المباشر)، ولم تبدأ قرعة التبادل بعد."
+        });
+      }
+
       const latestRun = db.db.prepare("SELECT * FROM swap_runs WHERE is_published = 1 ORDER BY id DESC LIMIT 1").get();
       if (!latestRun) {
         return sendJson(res, 200, {

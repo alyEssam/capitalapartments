@@ -1440,6 +1440,53 @@ async function queryResult() {
     }
 
     if (data.published === false) {
+      if (data.inPreferencesPhase) {
+        display.innerHTML = `
+          <div style="background: #eff6ff; border: 2px solid #3b82f6; padding: 2rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div style="font-size: 2.8rem; margin-bottom: 0.6rem;">⏳</div>
+            <div style="font-weight: 800; color: #1e3a8a; font-size: 1.3rem; margin-bottom: 0.5rem;">
+              لم تظهر النتيجة الرسمية للقرعة التبادلية بعد
+            </div>
+            <div style="color: #1e40af; font-size: 0.95rem; line-height: 1.6; max-width: 640px; margin: 0 auto;">
+              أهلاً أستاذ <strong>${escapeHtml(data.user?.full_name || '')}</strong>، نود إحاطتك علماً بأن المنظومة حالياً في <strong>(المرحلة الثانية: إدخال وتسجيل رغبات الموظفين)</strong>، ولم يتم إجراء السحب والقرعة الإلكترونية بعد.
+            </div>
+            <div style="color: #475569; font-size: 0.85rem; margin-top: 0.5rem;">
+              سيتم إجراء القرعة الإلكترونية الشاملة واعتماد النتائج الرسمية لجميع المتقدمين فور انتهاء المهلة المحددة لتسجيل الرغبات من قبل لجنة الإسكان.
+            </div>
+
+            ${(data.prefsCount > 0) ? `
+              <div style="margin-top: 1.25rem; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 1rem; max-width: 550px; margin-left: auto; margin-right: auto; text-align: right;">
+                <div style="display: flex; align-items: center; justify-content: space-between; font-weight: 800; color: #166534; font-size: 0.92rem;">
+                  <span>📋 رغباتك المسجلة بالمنظومة:</span>
+                  <span style="background: #dcfce7; padding: 2px 10px; border-radius: 12px; font-size: 0.82rem;">${data.prefsCount} / 20 رغبة</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #15803d; margin-top: 0.35rem; line-height: 1.5;">
+                  تم قيد رغباتك بنجاح في قاعدة البيانات وهي محفوظة ومؤكدة لدخول القرعة الإلكترونية فور غلق باب التسجيل.
+                </div>
+                <div style="text-align: center; margin-top: 0.75rem;">
+                  <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('tab-register')" style="font-size: 0.82rem; padding: 5px 14px;">
+                    ✏️ مراجعة أو تعديل قائمة رغباتك
+                  </button>
+                </div>
+              </div>
+            ` : `
+              <div style="margin-top: 1.25rem; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 0.9rem; max-width: 550px; margin-left: auto; margin-right: auto; text-align: center;">
+                <div style="font-weight: 800; color: #92400e; font-size: 0.88rem; margin-bottom: 0.35rem;">
+                  ⚠️ تنبيه: لم تقم بتسجيل رغباتك الـ 20 بعد!
+                </div>
+                <div style="font-size: 0.8rem; color: #b45309; line-height: 1.5; margin-bottom: 0.6rem;">
+                  يرجى الانتقال إلى تبويب تسجيل الرغبات واختيار الشقق البديلة التي تناسبك لضمان اشتراكك في القرعة الإلكترونية.
+                </div>
+                <button type="button" class="btn btn-gold btn-sm" onclick="switchTab('tab-register')" style="font-size: 0.82rem; padding: 6px 16px;">
+                  ➕ تسجيل رغباتك الآن
+                </button>
+              </div>
+            `}
+          </div>
+        `;
+        return;
+      }
+
       display.innerHTML = `
         <div style="background: #eff6ff; border: 2px dashed #3b82f6; padding: 2rem; border-radius: 12px; text-align: center;">
           <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">⏳</div>
