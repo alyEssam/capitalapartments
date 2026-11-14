@@ -787,6 +787,37 @@ const server = http.createServer(async (req, res) => {
     }
 
     // 9. Admin: Get all participants & their preferences
+    
+    // 9b. Admin: Delete User
+    if (pathname === "/api/admin/user-delete" && method === "POST") {
+      try {
+        const body = await parseBody(req);
+        if (!body.userId) {
+          return sendJson(res, 400, { success: false, message: "يرجى تحديد الموظف المطلوب حذفه" });
+        }
+        const outcome = db.deleteUser(Number(body.userId));
+        return sendJson(res, 200, outcome);
+      } catch (err) {
+        console.error("Delete user error:", err);
+        return sendJson(res, 400, { success: false, message: err.message });
+      }
+    }
+
+    // 9c. Admin: Update User
+    if (pathname === "/api/admin/user-update" && method === "POST") {
+      try {
+        const body = await parseBody(req);
+        if (!body.userId) {
+          return sendJson(res, 400, { success: false, message: "يرجى تحديد الموظف المطلوب تحديثه" });
+        }
+        const outcome = db.updateAdminUser(Number(body.userId), body);
+        return sendJson(res, 200, outcome);
+      } catch (err) {
+        console.error("Update user error:", err);
+        return sendJson(res, 400, { success: false, message: err.message });
+      }
+    }
+
     if (pathname === "/api/admin/users" && method === "GET") {
       const users = db.getAllUsers();
       return sendJson(res, 200, { success: true, users });

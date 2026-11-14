@@ -2246,9 +2246,17 @@ function renderRegisteredUsersTableRows() {
         <td style="padding: 0.5rem; text-align: center;">${statusBadge}</td>
         <td style="padding: 0.5rem; text-align: center;">${prefsCell}</td>
         <td style="padding: 0.5rem; text-align: center;">
-          <button type="button" class="btn btn-outline btn-sm" onclick="viewEmployeeDesires('${escapeHtml(u.national_id)}')" style="font-size: 0.74rem; padding: 3px 8px; white-space: nowrap;">
-            👁️ الرغبات
-          </button>
+          <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="viewEmployeeDesires('${escapeHtml(u.national_id)}')" title="استعراض الرغبات الـ 20" style="font-size: 0.72rem; padding: 3px 7px;">
+              👁️
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openEditUserModal(${u.id})" title="تعديل بيانات الموظف والشقة" style="font-size: 0.72rem; padding: 3px 7px; background: #2563eb;">
+              ✏️
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteUserByAdmin(${u.id}, '${escapeHtml(u.full_name)}', '${escapeHtml(u.national_id)}')" title="حذف الموظف نهائياً وتحرير شقته" style="font-size: 0.72rem; padding: 3px 7px;">
+              🗑️
+            </button>
+          </div>
         </td>
       </tr>
     `;
@@ -3661,4 +3669,192 @@ function fallbackCopyText(textarea) {
   textarea.select();
   document.execCommand('copy');
   showToast("تم نسخ نص الإعلان بنجاح! 📋", "success");
+}
+
+
+// ==========================================
+// ADMIN USER MANAGEMENT (DELETE & EDIT)
+// ==========================================
+async function deleteUserByAdmin(userId, name, nid) {
+  if (!confirm(`هل أنت متأكد تماماً من حذف الموظف "${name}" (رقم قومي: ${nid}) نهائياً من المنظومة؟\n\n⚠️ سيتم تحرير شقته الأصلية بالكامل لتصبح متاحة في الكتالوج، وحذف رغباته المسجلة.`)) {
+    return;
+  }
+
+  try {
+    showToast("جاري حذف الموظف وتحرير الشقة... ⏳", "info");
+    const res = await fetch("/api/admin/user-delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, "success");
+      await loadStats();
+      await loadAllRegisteredUsers();
+      await loadApartments();
+      loadDirectSwapsTable();
+    } else {
+      showToast(data.message || "فشل حذف الموظف", "error");
+    }
+  } catch (err) {
+    showToast("حدث خطأ أثناء محاولة الحذف", "error");
+  }
+}
+
+function openEditUserModal(userId) {
+  const u = registeredUsersList.find(x => x.id === userId);
+  if (!u) {
+    showToast("لم يتم العثور على بيانات الموظف", "error");
+    return;
+  }
+
+  document.getElementById("edit-user-id").value = u.id;
+  document.getElementById("edit-user-name").value = u.full_name || "";
+  document.getElementById("edit-user-nid").value = u.national_id || "";
+  document.getElementById("edit-user-phone").value = u.phone || "";
+  document.getElementById("edit-user-workplace").value = u.workplace || "";
+  document.getElementById("edit-user-status").value = u.swap_status || "WANTS_SWAP";
+  document.getElementById("edit-user-desired").value = u.swap_desired_notes || "";
+  document.getElementById("edit-user-undesired").value = u.swap_undesired_notes || "";
+
+  document.getElementById("edit-user-apt-code").textContent = u.apt_code || "-";
+  document.getElementById("edit-user-apt-desc").innerHTML = u.apt_district 
+    ? `<strong>${u.apt_district}</strong> - مجاورة ${u.apt_neighborhood || ''} - عمارة <strong>${u.apt_building || ''}</strong> - وحدة <strong>${u.apt_unit || ''}</strong> (${u.apt_floor_label || ''}) - نموذج ${u.apt_model || ''} (${u.apt_area || ''}م²) | رقم عقاري: <code>${u.apt_national_id || '-'}</code>`
+    : '<span style="color: #94a3b8;">لم يتم ربط شقة أصلية بعد</span>';
+
+  // Reset reassign search
+  document.getElementById("edit-user-new-apt-search").value = "";
+  document.getElementById("edit-user-selected-apt-id").value = "";
+  document.getElementById("edit-user-new-apt-results").style.display = "none";
+  document.getElementById("edit-user-new-apt-selected").style.display = "none";
+
+  document.getElementById("edit-user-modal").style.display = "flex";
+}
+
+function closeEditUserModal() {
+  document.getElementById("edit-user-modal").style.display = "none";
+}
+
+function searchApartmentForReassign() {
+  const q = (document.getElementById("edit-user-new-apt-search")?.value || "").trim().toLowerCase();
+  const resultsBox = document.getElementById("edit-user-new-apt-results");
+  if (!resultsBox) return;
+
+  if (q.length < 2) {
+    resultsBox.style.display = "none";
+    return;
+  }
+
+  const currentUserId = Number(document.getElementById("edit-user-id")?.value);
+  const matched = (state.apartments || []).filter(a => {
+    return (a.national_property_id && a.national_property_id.includes(q)) ||
+           (a.code && a.code.toLowerCase().includes(q)) ||
+           (a.building && String(a.building).includes(q) && a.unit_number && String(a.unit_number).toLowerCase().includes(q));
+  }).slice(0, 15);
+
+  if (matched.length === 0) {
+    resultsBox.innerHTML = '<div style="padding: 8px; color: #64748b; font-size: 0.8rem; text-align: center;">لا توجد شقق مطابقة للبحث في كراسة الشروط</div>';
+    resultsBox.style.display = "block";
+    return;
+  }
+
+  resultsBox.innerHTML = matched.map(a => {
+    const isOwnedByOther = a.original_owner_id && a.original_owner_id !== currentUserId;
+    const ownerUser = isOwnedByOther ? (registeredUsersList.find(u => u.id === a.original_owner_id)?.full_name || 'موظف آخر') : null;
+
+    return `
+      <div style="padding: 6px 10px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; cursor: pointer; ${isOwnedByOther ? 'background: #fff1f2;' : 'hover:background: #f8fafc;'}" onclick="selectApartmentForReassign(${a.id}, '${escapeHtml(a.district)}', '${escapeHtml(a.building)}', '${escapeHtml(a.unit_number)}', '${escapeHtml(a.floor_label)}', ${a.area}, '${escapeHtml(a.national_property_id || '')}', ${isOwnedByOther ? 1 : 0}, '${escapeHtml(ownerUser || '')}')">
+        <div>
+          <span style="font-weight: 700; color: #1e3a8a;">${a.district} - عمارة ${a.building} - وحدة ${a.unit_number}</span>
+          <span style="font-size: 0.75rem; color: #64748b;"> (${a.floor_label} - ${a.area}م²)</span>
+          <div style="font-size: 0.72rem; color: #94a3b8; font-family: monospace;">عقاري: ${a.national_property_id || '-'}</div>
+        </div>
+        <div>
+          ${isOwnedByOther 
+            ? `<span style="color: #be123c; font-size: 0.75rem; font-weight: 700;">⚠️ مسجلة لـ: ${ownerUser}</span>` 
+            : '<span style="color: #16a34a; font-size: 0.75rem; font-weight: 700;">✔️ متاحة للاختيار</span>'}
+        </div>
+      </div>
+    `;
+  }).join('');
+  resultsBox.style.display = "block";
+}
+
+function selectApartmentForReassign(aptId, dist, bld, unit, flLabel, area, natId, isOwnedByOther, ownerUser) {
+  if (isOwnedByOther) {
+    if (!confirm(`⚠️ تنبيه: هذه الشقة مسجلة حالياً باسم الموظف (${ownerUser})!\n\nإذا قمت باختيارها ونقلها، ستصبح ملكاً لهذا الموظف، ويجب إعادة تخصيص شقة أخرى للموظف السابق. هل تريد المتابعة؟`)) {
+      return;
+    }
+  }
+
+  document.getElementById("edit-user-selected-apt-id").value = aptId;
+  const selBadge = document.getElementById("edit-user-new-apt-selected");
+  selBadge.innerHTML = `✔️ تم تحديد الشقة الجديدة: ${dist} - عمارة ${bld} - وحدة ${unit} (${flLabel} - ${area}م²) | عقاري: ${natId}`;
+  selBadge.style.display = "block";
+  document.getElementById("edit-user-new-apt-results").style.display = "none";
+}
+
+async function submitEditUserForm(event) {
+  event.preventDefault();
+
+  const userId = Number(document.getElementById("edit-user-id").value);
+  const fullName = document.getElementById("edit-user-name").value.trim();
+  const nationalId = document.getElementById("edit-user-nid").value.trim();
+  const phone = document.getElementById("edit-user-phone").value.trim();
+  const workplace = document.getElementById("edit-user-workplace").value.trim();
+  const swapStatus = document.getElementById("edit-user-status").value;
+  const desired = document.getElementById("edit-user-desired").value.trim();
+  const undesired = document.getElementById("edit-user-undesired").value.trim();
+  const selectedAptId = document.getElementById("edit-user-selected-apt-id").value;
+
+  if (!fullName) {
+    showToast("يرجى إدخال اسم الموظف", "error");
+    return;
+  }
+  if (!nationalId || nationalId.length !== 14) {
+    showToast("الرقم القومي يجب أن يتكون من 14 رقماً", "error");
+    return;
+  }
+  if (!phone) {
+    showToast("يرجى إدخال رقم الهاتف", "error");
+    return;
+  }
+
+  const payload = {
+    userId,
+    full_name: fullName,
+    national_id: nationalId,
+    phone,
+    workplace,
+    swap_status: swapStatus,
+    swap_desired_notes: desired,
+    swap_undesired_notes: undesired
+  };
+
+  if (selectedAptId) {
+    payload.original_apartment_id = Number(selectedAptId);
+  }
+
+  try {
+    showToast("جاري حفظ التعديلات... ⏳", "info");
+    const res = await fetch("/api/admin/user-update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, "success");
+      closeEditUserModal();
+      await loadStats();
+      await loadAllRegisteredUsers();
+      await loadApartments();
+      loadDirectSwapsTable();
+    } else {
+      showToast(data.message || "فشل حفظ التعديلات", "error");
+    }
+  } catch (err) {
+    showToast("حدث خطأ أثناء حفظ التعديلات", "error");
+  }
 }
