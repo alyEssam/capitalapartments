@@ -2454,11 +2454,19 @@ function renderCandidatesTableRows() {
             </div>
           ` : ''}
         </td>
-        <td style="padding: 0.6rem; text-align: center; font-weight: 700;">${isSwapped && r.rankAchieved ? `الرغبة ${r.rankAchieved}` : 'الأصلية'}</td>
+        <td style="padding: 0.6rem; text-align: center; font-weight: 700;">
+          ${!isSwapped ? 'الأصلية' : (r.cycleId && r.cycleId.startsWith('DIRECT-PAIR-') ? '<span style="color: #166534;">معتمد مسبقاً ✔️</span>' : ('<span style="color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 10px;">الرغبة #' + r.rankAchieved + '</span>'))}
+        </td>
         <td style="padding: 0.6rem; font-size: 0.8rem;">
-          ${!isSwapped || r.swapType === 'KEPT_ORIGINAL' ? 'احتفاظ' : `
+          ${!isSwapped || r.swapType === 'KEPT_ORIGINAL' ? 'احتفاظ بالشقة' : `
             <div>
-              <div style="font-weight: 700; color: #166534;">${r.swapType === 'DIRECT_PAIR' ? 'ثنائي مباشر (طرفان)' : `دورة تبادل (${(r.allCycleMembers || []).length || (r.cyclePartners || []).length + 1 || ''} أطراف)`}</div>
+              <div style="font-weight: 700;">
+                ${r.cycleId && r.cycleId.startsWith('DIRECT-PAIR-') 
+                  ? '<span style="color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">🤝 توافق ودي معتمد مسبقاً</span>' 
+                  : (r.swapType === 'DIRECT_PAIR' 
+                      ? '<span style="color: #1e40af; background: #eff6ff; border: 1px solid #bfdbfe; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">🎯 توفيق آلي ثنائي (رغبات أ ↔ ب)</span>' 
+                      : ('<span style="color: #7e22ce; background: #faf5ff; border: 1px solid #e9d5ff; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">🔄 دورة تبادل (' + ((r.allCycleMembers || []).length || '') + ' أطراف)</span>'))}
+              </div>
               ${r.cycleId ? `
                 <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 0.72rem; margin-top: 3px; font-weight: 700;" onclick="showCycleModal('${r.cycleId}')">
                   👥 أطراف ${r.cycleId}
