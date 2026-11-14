@@ -2577,7 +2577,9 @@ function renderMatchingResults(data) {
                         ${(m.assignNatId || m.assign_nat_id) ? `<div style="font-size: 0.72rem; color: #15803d; font-family: monospace;">عقاري: ${m.assignNatId || m.assign_nat_id}</div>` : ''}
                       </td>
                       <td style="padding: 6px 8px; text-align: center;">
-                        <span style="background: #e0f2fe; color: #0284c7; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.75rem;">الرغبة #${m.rankAchieved || m.rank_achieved || 1}</span>
+                        ${(c.cycleId && c.cycleId.startsWith('DIRECT-')) || m.isDirectAgreed || (c.type && c.type.includes('معتمد'))
+                          ? '<span style="background: #f0fdf4; color: #166534; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.75rem;">معتمد مسبقاً ✔️</span>'
+                          : `<span style="background: #e0f2fe; color: #0284c7; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.75rem;">الرغبة #${m.rankAchieved || m.rank_achieved || 1}</span>`}
                       </td>
                     </tr>
                   `;
@@ -3033,7 +3035,9 @@ async function showCycleModal(cycleId) {
                     ${recvFrom ? `<div style="font-size: 0.74rem; color: #1e40af; font-weight: 700; margin-top: 2px;">🔑 يتسلمها من: ${recvFrom}</div>` : ''}
                   </td>
                   <td style="padding: 8px; text-align: center;">
-                    <span style="background: #e0f2fe; color: #0284c7; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.75rem;">الرغبة #${m.rankAchieved || m.rank_achieved || 1}</span>
+                    ${(cycleId && cycleId.startsWith('DIRECT-')) || m.isDirectAgreed || (m.swap_type === 'DIRECT_PAIR' && !m.rank_achieved)
+                      ? '<span style="background: #f0fdf4; color: #166534; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.75rem;">معتمد مسبقاً ✔️</span>'
+                      : `<span style="background: #e0f2fe; color: #0284c7; padding: 2px 7px; border-radius: 4px; font-weight: 800; font-size: 0.75rem;">الرغبة #${m.rankAchieved || m.rank_achieved || 1}</span>`}
                   </td>
                 </tr>
               `;
