@@ -1445,13 +1445,13 @@ async function queryResult() {
           <div style="background: #eff6ff; border: 2px solid #3b82f6; padding: 2rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
             <div style="font-size: 2.8rem; margin-bottom: 0.6rem;">⏳</div>
             <div style="font-weight: 800; color: #1e3a8a; font-size: 1.3rem; margin-bottom: 0.5rem;">
-              لم تظهر النتيجة الرسمية للقرعة التبادلية بعد
+              لم تظهر النتيجة الرسمية للتبادل بعد
             </div>
             <div style="color: #1e40af; font-size: 0.95rem; line-height: 1.6; max-width: 640px; margin: 0 auto;">
-              أهلاً أستاذ <strong>${escapeHtml(data.user?.full_name || '')}</strong>، نود إحاطتك علماً بأن المنظومة حالياً في <strong>(المرحلة الثانية: إدخال وتسجيل رغبات الموظفين)</strong>، ولم يتم إجراء السحب والقرعة الإلكترونية بعد.
+              أهلاً أستاذ <strong>${escapeHtml(data.user?.full_name || '')}</strong>، نود إحاطتك علماً بأن المنظومة حالياً في <strong>(المرحلة الثانية: إدخال وتسجيل رغبات الموظفين)</strong>، ولم يتم اعتماد نتائج التبادل النهائي بعد.
             </div>
             <div style="color: #475569; font-size: 0.85rem; margin-top: 0.5rem;">
-              سيتم إجراء القرعة الإلكترونية الشاملة واعتماد النتائج الرسمية لجميع المتقدمين فور انتهاء المهلة المحددة لتسجيل الرغبات من قبل لجنة الإسكان.
+              سيتم إجراء التسكين والتبادل الإلكتروني الشامل واعتماد النتائج الرسمية لجميع المتقدمين فور انتهاء المهلة المحددة لتسجيل الرغبات من قبل لجنة الإسكان.
             </div>
 
             ${(data.prefsCount > 0) ? `
@@ -1461,7 +1461,7 @@ async function queryResult() {
                   <span style="background: #dcfce7; padding: 2px 10px; border-radius: 12px; font-size: 0.82rem;">${data.prefsCount} / 20 رغبة</span>
                 </div>
                 <div style="font-size: 0.82rem; color: #15803d; margin-top: 0.35rem; line-height: 1.5;">
-                  تم قيد رغباتك بنجاح في قاعدة البيانات وهي محفوظة ومؤكدة لدخول القرعة الإلكترونية فور غلق باب التسجيل.
+                  تم قيد رغباتك بنجاح في قاعدة البيانات وهي محفوظة ومؤكدة لإجراء التبادل والتسكين الإلكتروني فور غلق باب التسجيل.
                 </div>
                 <div style="text-align: center; margin-top: 0.75rem;">
                   <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('tab-register')" style="font-size: 0.82rem; padding: 5px 14px;">
@@ -1475,7 +1475,7 @@ async function queryResult() {
                   ⚠️ تنبيه: لم تقم بتسجيل رغباتك الـ 20 بعد!
                 </div>
                 <div style="font-size: 0.8rem; color: #b45309; line-height: 1.5; margin-bottom: 0.6rem;">
-                  يرجى الانتقال إلى تبويب تسجيل الرغبات واختيار الشقق البديلة التي تناسبك لضمان اشتراكك في القرعة الإلكترونية.
+                  يرجى الانتقال إلى تبويب تسجيل الرغبات واختيار الشقق البديلة التي تناسبك لضمان اشتراكك في عملية التبادل والتسكين.
                 </div>
                 <button type="button" class="btn btn-gold btn-sm" onclick="switchTab('tab-register')" style="font-size: 0.82rem; padding: 6px 16px;">
                   ➕ تسجيل رغباتك الآن
@@ -1509,7 +1509,7 @@ async function queryResult() {
       display.innerHTML = `
         <div style="background: #fff1f2; border: 1.5px solid #fecdd3; padding: 1.5rem; border-radius: 12px; text-align: center;">
           <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
-          <div style="font-weight: 800; color: #9f1239; font-size: 1.1rem;">لم تسجل بيانات مشاركة في هذه القرعة بهذا الرقم القومي</div>
+          <div style="font-weight: 800; color: #9f1239; font-size: 1.1rem;">لم تسجل بيانات مشاركة في منظومة التبادل بهذا الرقم القومي</div>
         </div>
       `;
       return;
@@ -1525,7 +1525,7 @@ async function queryResult() {
           </div>
           <div style="text-align: left;">
             <div style="font-size: 0.95rem; font-weight: 800; color: #d97706; background: #fef3c7; padding: 0.3rem 0.8rem; border-radius: 8px;">
-              🎲 قرعة #${r.random_priority_number || '-'}
+              ${r.swap_type === 'DIRECT_PAIR' ? '🤝 تبادل ودي مباشر معتمد' : (r.random_priority_number ? 'رقم أسبقية #' + r.random_priority_number : 'طلب معتمد')}
             </div>
           </div>
         </div>
