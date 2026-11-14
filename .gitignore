@@ -1,6 +1,8 @@
 node_modules
 *.log
+data/housing.db
 data/housing.db-wal
 data/housing.db-shm
+data/*.db
 .DS_Store
 Thumbs.db
