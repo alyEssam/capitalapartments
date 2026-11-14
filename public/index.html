@@ -747,7 +747,65 @@
           </div>
         </div>
 
-                <!-- Direct Swap Manager Card -->
+                <!-- ======================================================== -->
+        <!-- LIVE ROSTER: ALL REGISTERED EMPLOYEES (132+ USERS) -->
+        <!-- ======================================================== -->
+        <div class="card" style="border: 2px solid #2563eb; background: white; margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+          <div class="card-header" style="border-bottom: 1px solid #bfdbfe; background: #f8faff; padding: 1rem 1.25rem;">
+            <div>
+              <h3 class="card-title" style="color: #1e3a8a; display: flex; align-items: center; gap: 0.5rem; font-size: 1.15rem;">
+                <span>👥</span>
+                <span>سجل الموظفين المسجلين بالمنظومة بالكامل (<span id="admin-users-total-badge">0</span> موظفاً)</span>
+              </h3>
+              <p style="font-size: 0.85rem; color: #475569; margin: 0.25rem 0 0;">
+                كشف حي ومباشر لجميع الزملاء المسجلين حالياً في المنظومة مع وحداتهم وجهات عملهم وحالة رغباتهم المسجلة.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="loadAllRegisteredUsers()">🔄 تحديث الكشف</button>
+              <a href="/api/admin/export-users-excel" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">📊 تحميل Excel كامل (.xls)</a>
+            </div>
+          </div>
+
+          <div style="padding: 1.25rem;">
+            <!-- Filter Pills & Search Bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+              <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="admin-users-filter-pills">
+                <button type="button" class="btn btn-outline btn-sm active-filter" data-user-filter="all" onclick="filterRegisteredUsers('all', this)">الكل (<span id="user-pill-all">0</span>)</button>
+                <button type="button" class="btn btn-outline btn-sm" data-user-filter="wants_swap" onclick="filterRegisteredUsers('wants_swap', this)">راغبون في التبديل 🔄 (<span id="user-pill-wants">0</span>)</button>
+                <button type="button" class="btn btn-outline btn-sm" data-user-filter="agreed_direct" onclick="filterRegisteredUsers('agreed_direct', this)">توافق ودي مباشر 🤝 (<span id="user-pill-agreed">0</span>)</button>
+                <button type="button" class="btn btn-outline btn-sm" data-user-filter="kept_original" onclick="filterRegisteredUsers('kept_original', this)">محتفظ بالشقة 🛡️ (<span id="user-pill-kept">0</span>)</button>
+                <button type="button" class="btn btn-outline btn-sm" data-user-filter="with_prefs" onclick="filterRegisteredUsers('with_prefs', this)">سجلوا رغبات 📋 (<span id="user-pill-with-prefs">0</span>)</button>
+                <button type="button" class="btn btn-outline btn-sm" data-user-filter="no_prefs" onclick="filterRegisteredUsers('no_prefs', this)">لم يسجلوا بعد ⏳ (<span id="user-pill-no-prefs">0</span>)</button>
+              </div>
+              <input type="text" id="admin-users-search-input" class="form-control" placeholder="بحث سريع بالاسم، الرقم القومي، الهاتف، الوزارة، الشقة..." style="width: 320px; font-size: 0.85rem;" oninput="onRegisteredUsersSearch()">
+            </div>
+
+            <!-- Users Table -->
+            <div style="overflow-x: auto; max-height: 520px; border: 1px solid var(--border); border-radius: 8px;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.84rem; text-align: right;">
+                <thead style="position: sticky; top: 0; background: #f1f5f9; z-index: 2; border-bottom: 2px solid var(--border);">
+                  <tr>
+                    <th style="padding: 0.6rem 0.5rem; text-align: center; width: 40px;">م</th>
+                    <th style="padding: 0.6rem;">اسم الموظف</th>
+                    <th style="padding: 0.6rem;">الرقم القومي</th>
+                    <th style="padding: 0.6rem;">الهاتف</th>
+                    <th style="padding: 0.6rem;">الوزارة / جهة العمل</th>
+                    <th style="padding: 0.6rem;">الشقة الأصلية</th>
+                    <th style="padding: 0.6rem; text-align: center;">حالة التبديل</th>
+                    <th style="padding: 0.6rem; text-align: center;">الرغبات</th>
+                    <th style="padding: 0.6rem; text-align: center;">إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-tbody">
+                  <tr><td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-muted);">جاري تحميل سجل الموظفين... ⏳</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direct Swap Manager Card -->
         <div class="card" style="border: 2px solid #d97706; background: #fffdfa; margin-bottom: 1.5rem;">
           <div class="card-header" style="border-bottom: 1px solid #fde68a;">
             <div>
@@ -922,6 +980,7 @@
 
           <!-- Matching Results Area -->
           <div id="matching-results-area" style="display: none;">
+            <div id="matching-simulation-notice" style="margin-bottom: 1rem;"></div>
             <div style="background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.25rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem;">
                 <div>

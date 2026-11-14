@@ -2106,8 +2106,158 @@ function closeDesiresModal() {
   document.getElementById("desires-modal").style.display = "none";
 }
 
+
+// ==========================================
+// REGISTERED USERS LIVE ROSTER
+// ==========================================
+let registeredUsersList = [];
+let registeredUsersFilter = "all";
+let registeredUsersSearch = "";
+
+async function loadAllRegisteredUsers() {
+  const tbody = document.getElementById("admin-users-tbody");
+  if (!tbody) return;
+
+  try {
+    const res = await fetch("/api/admin/users");
+    const data = await res.json();
+    if (!data.success || !Array.isArray(data.users)) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #ef4444; padding: 1.5rem;">تعذر تحميل سجل الموظفين</td></tr>';
+      return;
+    }
+
+    registeredUsersList = data.users;
+
+    // Update Pill Counts
+    const total = registeredUsersList.length;
+    const wants = registeredUsersList.filter(u => u.swap_status === 'WANTS_SWAP').length;
+    const agreed = registeredUsersList.filter(u => u.swap_status === 'AGREED_DIRECT').length;
+    const kept = registeredUsersList.filter(u => u.swap_status === 'KEPT_ORIGINAL').length;
+    const withPrefs = registeredUsersList.filter(u => (u.preferences_count || 0) > 0).length;
+    const noPrefs = registeredUsersList.filter(u => (!u.preferences_count || u.preferences_count === 0) && u.swap_status === 'WANTS_SWAP').length;
+
+    const badgeTotal = document.getElementById("admin-users-total-badge");
+    if (badgeTotal) badgeTotal.textContent = total.toLocaleString('ar-EG');
+    const pillAll = document.getElementById("user-pill-all");
+    if (pillAll) pillAll.textContent = total.toLocaleString('ar-EG');
+    const pillWants = document.getElementById("user-pill-wants");
+    if (pillWants) pillWants.textContent = wants.toLocaleString('ar-EG');
+    const pillAgreed = document.getElementById("user-pill-agreed");
+    if (pillAgreed) pillAgreed.textContent = agreed.toLocaleString('ar-EG');
+    const pillKept = document.getElementById("user-pill-kept");
+    if (pillKept) pillKept.textContent = kept.toLocaleString('ar-EG');
+    const pillWithPrefs = document.getElementById("user-pill-with-prefs");
+    if (pillWithPrefs) pillWithPrefs.textContent = withPrefs.toLocaleString('ar-EG');
+    const pillNoPrefs = document.getElementById("user-pill-no-prefs");
+    if (pillNoPrefs) pillNoPrefs.textContent = noPrefs.toLocaleString('ar-EG');
+
+    renderRegisteredUsersTableRows();
+  } catch(err) {
+    console.error("loadAllRegisteredUsers error:", err);
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #ef4444; padding: 1.5rem;">حدث خطأ أثناء تحميل سجل الموظفين</td></tr>';
+  }
+}
+
+function filterRegisteredUsers(filterType, btn) {
+  registeredUsersFilter = filterType;
+  document.querySelectorAll('#admin-users-filter-pills .active-filter').forEach(b => b.classList.remove('active-filter'));
+  if (btn) btn.classList.add('active-filter');
+  renderRegisteredUsersTableRows();
+}
+
+function onRegisteredUsersSearch() {
+  const input = document.getElementById("admin-users-search-input");
+  registeredUsersSearch = (input ? input.value : "").trim().toLowerCase();
+  renderRegisteredUsersTableRows();
+}
+
+function renderRegisteredUsersTableRows() {
+  const tbody = document.getElementById("admin-users-tbody");
+  if (!tbody) return;
+
+  let filtered = [...registeredUsersList];
+
+  // Category filter
+  if (registeredUsersFilter === "wants_swap") {
+    filtered = filtered.filter(u => u.swap_status === 'WANTS_SWAP');
+  } else if (registeredUsersFilter === "agreed_direct") {
+    filtered = filtered.filter(u => u.swap_status === 'AGREED_DIRECT');
+  } else if (registeredUsersFilter === "kept_original") {
+    filtered = filtered.filter(u => u.swap_status === 'KEPT_ORIGINAL');
+  } else if (registeredUsersFilter === "with_prefs") {
+    filtered = filtered.filter(u => (u.preferences_count || 0) > 0);
+  } else if (registeredUsersFilter === "no_prefs") {
+    filtered = filtered.filter(u => (!u.preferences_count || u.preferences_count === 0) && u.swap_status === 'WANTS_SWAP');
+  }
+
+  // Text search
+  if (registeredUsersSearch) {
+    const q = registeredUsersSearch;
+    filtered = filtered.filter(u => {
+      return (u.full_name && u.full_name.toLowerCase().includes(q)) ||
+             (u.national_id && u.national_id.includes(q)) ||
+             (u.phone && u.phone.includes(q)) ||
+             (u.workplace && u.workplace.toLowerCase().includes(q)) ||
+             (u.apt_district && u.apt_district.toLowerCase().includes(q)) ||
+             (u.apt_building && String(u.apt_building).includes(q)) ||
+             (u.apt_unit && String(u.apt_unit).toLowerCase().includes(q)) ||
+             (u.apt_code && u.apt_code.toLowerCase().includes(q)) ||
+             (u.apt_national_id && u.apt_national_id.includes(q));
+    });
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">لا توجد نتائج مطابقة لخيارات البحث المحددة</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((u, idx) => {
+    let statusBadge = "";
+    if (u.swap_status === 'AGREED_DIRECT') {
+      statusBadge = '<span style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 2px 7px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; white-space: nowrap;">🤝 توافق مباشر</span>';
+    } else if (u.swap_status === 'KEPT_ORIGINAL') {
+      statusBadge = '<span style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 2px 7px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; white-space: nowrap;">🛡️ محتفظ بشقته</span>';
+    } else {
+      statusBadge = '<span style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; white-space: nowrap;">🔄 يرغب بالتبديل</span>';
+    }
+
+    const prefsCount = Number(u.preferences_count || 0);
+    const prefsCell = prefsCount > 0
+      ? '<span style="background: #dbeafe; color: #1e40af; font-weight: 800; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem;">' + prefsCount + ' / 20</span>'
+      : '<span style="color: #94a3b8; font-size: 0.75rem;">0 / 20</span>';
+
+    const aptStr = u.apt_district 
+      ? '<strong>' + u.apt_district + '</strong> - مجاورة ' + (u.apt_neighborhood || '') + ' - عمارة <strong>' + (u.apt_building || '') + '</strong> - وحدة <strong>' + (u.apt_unit || '') + '</strong> (' + (u.apt_floor_label || '') + ') - ' + (u.apt_area || '') + 'م²'
+      : '<span style="color: #94a3b8;">غير محددة</span>';
+
+    return `
+      <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+        <td style="padding: 0.5rem; text-align: center; color: #64748b; font-weight: 700;">${idx + 1}</td>
+        <td style="padding: 0.5rem;">
+          <div style="font-weight: 800; color: #0f172a;">${escapeHtml(u.full_name)}</div>
+          <div style="font-size: 0.72rem; color: #64748b; font-family: monospace;">عقاري: ${escapeHtml(u.apt_national_id || '-')}</div>
+        </td>
+        <td style="padding: 0.5rem; font-family: monospace; font-size: 0.8rem; color: #334155;">${escapeHtml(u.national_id)}</td>
+        <td style="padding: 0.5rem; font-family: monospace; font-size: 0.8rem;">
+          ${u.phone ? `<a href="https://wa.me/2${escapeHtml(u.phone)}" target="_blank" style="color: #16a34a; text-decoration: none; font-weight: 700;">📱 ${escapeHtml(u.phone)}</a>` : '-'}
+        </td>
+        <td style="padding: 0.5rem; color: #1e3a8a; font-weight: 600;">${escapeHtml(u.workplace || '-')}</td>
+        <td style="padding: 0.5rem; font-size: 0.8rem; line-height: 1.4;">${aptStr}</td>
+        <td style="padding: 0.5rem; text-align: center;">${statusBadge}</td>
+        <td style="padding: 0.5rem; text-align: center;">${prefsCell}</td>
+        <td style="padding: 0.5rem; text-align: center;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="viewEmployeeDesires('${escapeHtml(u.national_id)}')" style="font-size: 0.74rem; padding: 3px 8px; white-space: nowrap;">
+            👁️ الرغبات
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
 async function loadAdminData() {
   await loadStats();
+  await loadAllRegisteredUsers();
   loadDirectSwapsTable();
 
   // Automatically load previously saved/committed matching run if available
@@ -2116,7 +2266,15 @@ async function loadAdminData() {
     const data = await res.json();
     if (data.success && data.hasRun) {
       state.latestMatchData = data;
-      renderMatchingResults(data);
+      const currentPhase = state.stats?.systemPhase || "PHASE_1_DIRECT";
+      // In Phase 3 (Official Results), automatically display matching run.
+      // In Phase 1 & 2 (Registration & Preferences), do NOT auto-open old simulations by default
+      if (currentPhase === "PHASE_3_RESULTS") {
+        renderMatchingResults(data);
+      } else {
+        const area = document.getElementById("matching-results-area");
+        if (area) area.style.display = "none";
+      }
     }
   } catch(e) {
     console.error("Could not load latest match:", e);
@@ -2316,6 +2474,24 @@ function renderCandidatesTableRows() {
 function renderMatchingResults(data) {
   const area = document.getElementById("matching-results-area");
   area.style.display = "block";
+
+  const noticeEl = document.getElementById("matching-simulation-notice");
+  const totalRegistered = state.stats?.totalUsers || 132;
+  const runParticipants = data.results ? data.results.length : (data.totalSwapped + data.keptOriginal);
+  if (noticeEl) {
+    if (runParticipants < totalRegistered) {
+      noticeEl.innerHTML = `
+        <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.5rem;">⚠️</span>
+          <div style="font-size: 0.86rem; color: #92400e; line-height: 1.5;">
+            <strong>تنبيه للجنة الإسكان:</strong> هذه النتائج المعروضة أدناه تخص محاكاة تجريبية سابقة (Run #${data.runId || '-'}) تم تشغيلها على <strong>${runParticipants} موظفاً</strong> فقط، في حين أن إجمالي الموظفين المسجلين حالياً بالمنظومة هو <strong>${totalRegistered} موظفاً</strong>. لتشغيل التوفيق وحساب النتائج على جميع الزملاء الحاليين، يرجى الضغط على زر <strong>(⚡ تشغيل التوفيق الآلي بالقرعة العشوائية)</strong> أعلاه.
+          </div>
+        </div>
+      `;
+    } else {
+      noticeEl.innerHTML = '';
+    }
+  }
 
   document.getElementById("stat-swapped-count").textContent = data.totalSwapped.toLocaleString('ar-EG');
   document.getElementById("stat-rank1-pct").textContent = `${data.satisfaction.rank1Percent}% (${data.satisfaction.rank1Count})`;
