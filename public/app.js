@@ -4258,7 +4258,7 @@ function generateClientSideAnalytics(apartments, statsObj) {
 }
 
 async function loadAdvancedAnalytics() {
-  const noticeBox = document.getElementById("analytics-error-notice");
+  
 
   // Ensure catalog apartments are loaded
   if (!state.apartments || state.apartments.length === 0) {
@@ -4290,7 +4290,7 @@ async function loadAdvancedAnalytics() {
     if (res && res.ok) {
       const data = await res.json();
       if (data && data.success && data.analytics) {
-        if (noticeBox) noticeBox.style.display = "none";
+        
         currentAnalyticsData = data.analytics;
         renderAnalyticsViews(data.analytics);
         return;
@@ -4303,12 +4303,12 @@ async function loadAdvancedAnalytics() {
   // 2. Resilient Client-Side Fallback Engine (Guarantees zero-downtime analytics)
   try {
     const computed = generateClientSideAnalytics(state.apartments || [], state.stats || null);
-    if (noticeBox) noticeBox.style.display = "none";
+    
     currentAnalyticsData = computed;
     renderAnalyticsViews(computed);
   } catch(compErr) {
     console.error("Client analytics fallback error:", compErr);
-    if (noticeBox) noticeBox.style.display = "block";
+    
   }
 }
 
