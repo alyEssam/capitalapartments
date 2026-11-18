@@ -119,6 +119,37 @@ function checkAreaBracketMatch(apt, bracketKey) {
   }
 }
 
+
+// ============================================================
+// FLOOR LABEL HELPER - shows floor in context of building height
+// ============================================================
+function buildFloorDisplay(apt) {
+  const floor = apt.floor;
+  const maxFloor = apt.building_max_floor;
+  const baseLabel = apt.floor_label || '';
+
+  // No max floor info? Just show original label
+  if (maxFloor === null || maxFloor === undefined) return baseLabel;
+
+  // Ground floor (0) special case
+  const isGround = floor === 0;
+  const isTop = floor === maxFloor;
+  const totalFloors = maxFloor + 1; // 0-indexed: 0..maxFloor = maxFloor+1 floors
+
+  // Floor label as ordinal text
+  let floorText = baseLabel;
+
+  if (isTop && isGround) {
+    // Single-floor building
+    return `${floorText} (أرضي وأخير — عمارة ${totalFloors} دور)`;
+  }
+
+  if (isTop) {
+    return `${floorText} ✦ آخر دور (من ${totalFloors} أدوار)`;
+  } else {
+    return `${floorText} (من ${totalFloors} أدوار)`;
+  }
+}
 document.addEventListener("DOMContentLoaded", () => {
   initHeaderCollapse();
   initCondolenceRibbon();
@@ -812,7 +843,7 @@ function filterPickerApts() {
           <span style="font-size: 0.68rem; background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; font-weight: 700;">🟢 متاح للتبادل</span>
         </div>
         <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">
-          ${apt.floor_label} | نموذج ${apt.model} (${apt.area}م²) | ${apt.meter_price.toLocaleString('ar-EG')} ج/م²
+          ${buildFloorDisplay(apt)} | نموذج ${apt.model} (${apt.area}م²) | ${apt.meter_price.toLocaleString('ar-EG')} ج/م²
         </div>
         <div style="font-size: 0.74rem; color: #1e40af; margin-top: 2px;">
           👤 صاحبها: <strong>${apt.owner_name}</strong> (${apt.owner_workplace || 'جهة العمل غير محددة'})
@@ -921,7 +952,7 @@ function renderPreferencesList() {
           <span>مجاورة ${apt.neighborhood} - مبنى ${apt.building} - وحدة ${apt.unit_number}</span>
         </div>
         <div style="font-size: 0.8rem; color: #64748b;">
-          ${apt.floor_label} | نموذج ${apt.model} (${apt.area}م²) | ${apt.meter_price.toLocaleString('ar-EG')} ج/م²
+          ${buildFloorDisplay(apt)} | نموذج ${apt.model} (${apt.area}م²) | ${apt.meter_price.toLocaleString('ar-EG')} ج/م²
         </div>
         <div style="font-size: 0.75rem; color: #166534; font-family: monospace; font-weight: 700; margin-top: 2px;">
           الرقم القومي العقاري: ${apt.national_property_id || apt.nationalPropertyId || apt.code}
@@ -1460,7 +1491,7 @@ function renderCatalog() {
       </div>
 
       <div style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-bottom: 0.4rem;">
-        وحدة ${apt.unit_number} <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">(${apt.floor_label})</span>
+        وحدة ${apt.unit_number} <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">${buildFloorDisplay(apt)}</span>
       </div>
 
       <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem;">
