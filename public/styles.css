@@ -1138,54 +1138,69 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 
+
 /* =============================================
-   COLLAPSIBLE HEADER - Mobile First
+   COLLAPSIBLE HEADER - Robust Multi-Device
    ============================================= */
 
 /* Wrapper for collapsible brand+badge */
 .header-collapsible {
   overflow: hidden;
-  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
-  max-height: 300px;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  max-height: 400px;
   opacity: 1;
 }
 
-.header-collapsible.collapsed {
-  max-height: 0;
-  opacity: 0;
-  pointer-events: none;
+/* Single universal collapsed class - works identically on mobile, iPad, and desktop */
+.header-collapsible.is-collapsed {
+  max-height: 0 !important;
+  opacity: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none !important;
 }
 
 /* Nav row: toggle button + nav tabs on same line */
 .nav-row {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   border-top: 1px solid var(--border);
-  padding-top: 0.4rem;
+  padding-top: 0.45rem;
 }
 
-/* Toggle button */
+/* Touch-friendly, comfortable toggle button */
 .header-toggle-btn {
   flex-shrink: 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 5px;
   background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  border: 1.5px solid #93c5fd;
   border-radius: 8px;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.75rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1e40af;
   cursor: pointer;
-  color: var(--primary);
-  font-weight: 700;
-  transition: background 0.2s;
-  line-height: 1;
+  min-height: 40px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s ease;
   white-space: nowrap;
+  user-select: none;
 }
 
-.header-toggle-btn:hover {
+.header-toggle-btn:hover, .header-toggle-btn:active {
   background: #dbeafe;
+  border-color: #3b82f6;
+  transform: scale(0.98);
+}
+
+.header-toggle-btn .toggle-text {
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 /* Remove border-top from nav-tabs since nav-row handles it */
@@ -1196,35 +1211,12 @@ body {
   min-width: 0;
 }
 
-/* On mobile: collapse brand by default */
 @media (max-width: 768px) {
-  .header-collapsible {
-    max-height: 0;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .header-collapsible.expanded {
-    max-height: 300px;
-    opacity: 1;
-    pointer-events: auto;
-  }
   .header-container {
-    padding: 0.4rem 0.75rem;
+    padding: 0.35rem 0.65rem;
     gap: 0;
   }
   .nav-row {
-    padding-top: 0.4rem;
-  }
-}
-
-/* On desktop: show brand by default */
-@media (min-width: 769px) {
-  .header-collapsible {
-    max-height: 300px;
-    opacity: 1;
-  }
-  .header-collapsible.collapsed {
-    max-height: 0;
-    opacity: 0;
+    padding-top: 0.35rem;
   }
 }

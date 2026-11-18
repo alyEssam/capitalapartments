@@ -4072,15 +4072,53 @@ async function submitEditUserForm(event) {
 let currentAnalyticsData = null;
 
 async function loadAdvancedAnalytics() {
+  const noticeBox = document.getElementById("analytics-error-notice");
   try {
-    const res = await fetch("/api/analytics");
-    const data = await res.json();
-    if (!data.success || !data.analytics) return;
+    // 1. Try public analytics endpoint
+    let res = await fetch("/api/analytics");
+    if (!res.ok) {
+      // 2. Fallback to admin analytics endpoint (in case server has older routing)
+      res = await fetch("/api/admin/analytics");
+    }
 
+    if (!res.ok) {
+      throw new Error(`رمز الاستجابة ${res.status}: لم يتم العثور على مسار الإحصائيات بالخادم`);
+    }
+
+    const data = await res.json();
+    if (!data.success || !data.analytics) {
+      throw new Error(data.message || "لم تتوفر بيانات الإحصائيات من الخادم");
+    }
+
+    if (noticeBox) noticeBox.style.display = "none";
     currentAnalyticsData = data.analytics;
     renderAnalyticsViews(data.analytics);
   } catch(err) {
     console.error("loadAdvancedAnalytics error:", err);
+    if (noticeBox) {
+      noticeBox.style.display = "block";
+      noticeBox.innerHTML = `
+        <div style="background: #fef2f2; border: 1.5px solid #f87171; border-radius: 10px; padding: 1.15rem 1.35rem; color: #991b1b; margin-bottom: 1.25rem;">
+          <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.3rem;">⚠️</span>
+            <span>تعذر جلب الإحصائيات العامة من الخادم حالياً</span>
+          </div>
+          <div style="font-size: 0.88rem; color: #7f1d1d; line-height: 1.65;">
+            <strong>سبب المشكلة على موقع أستاذ عماد:</strong> تم إضافة مسار الإحصائيات العامة <code>/api/analytics</code> حديثاً إلى الكود المصدري للمنصة. لتفعيله على سيرفر أستاذ عماد، يلزم تنفيذ الخطوتين التاليتين:
+            <ol style="margin: 0.5rem 1.25rem 0.5rem 0; font-size: 0.84rem; line-height: 1.6;">
+              <li>سحب التحديث الأخير عبر الأمر: <code style="background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-weight: 700;">git pull origin main</code></li>
+              <li>إعادة تشغيل الخادم عبر الأمر: <code style="background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-weight: 700;">node server.js</code></li>
+            </ol>
+            بمجرد إعادة تشغيل الخادم هناك، ستعمل هذه الشاشة تلقائياً.
+          </div>
+          <div style="margin-top: 0.85rem;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="loadAdvancedAnalytics()" style="background: white; color: #991b1b; border-color: #f87171; font-weight: 700;">
+              🔄 إعادة المحاولة الآن
+            </button>
+          </div>
+        </div>
+      `;
+    }
   }
 }
 
@@ -4411,67 +4449,54 @@ function onCatalogSortChanged(val) {
 }
 
 // ============================================================
-// COLLAPSIBLE HEADER - Mobile toggle
+
+// ============================================================
+// COLLAPSIBLE HEADER - Robust Multi-Device (Mobile, iPad, PC)
 // ============================================================
 function toggleHeaderBrand() {
   const collapsible = document.getElementById('header-collapsible');
   const arrow = document.getElementById('header-toggle-arrow');
+  const txt = document.getElementById('header-toggle-text');
   if (!collapsible) return;
 
-  const isMobile = window.innerWidth <= 768;
+  const isCurrentlyCollapsed = collapsible.classList.contains('is-collapsed');
 
-  if (isMobile) {
-    // On mobile: toggle 'expanded' class (default is collapsed)
-    const isExpanded = collapsible.classList.contains('expanded');
-    if (isExpanded) {
-      collapsible.classList.remove('expanded');
-      arrow.textContent = '▲';
-      localStorage.setItem('headerExpanded', 'false');
-    } else {
-      collapsible.classList.add('expanded');
-      arrow.textContent = '▼';
-      localStorage.setItem('headerExpanded', 'true');
-    }
+  if (isCurrentlyCollapsed) {
+    // Open
+    collapsible.classList.remove('is-collapsed');
+    if (arrow) arrow.textContent = '▲';
+    if (txt) txt.textContent = 'إخفاء';
+    try { localStorage.setItem('header_collapsed_pref', '0'); } catch(e) {}
   } else {
-    // On desktop: toggle 'collapsed' class (default is expanded)
-    const isCollapsed = collapsible.classList.contains('collapsed');
-    if (isCollapsed) {
-      collapsible.classList.remove('collapsed');
-      arrow.textContent = '▼';
-      localStorage.setItem('headerExpanded', 'true');
-    } else {
-      collapsible.classList.add('collapsed');
-      arrow.textContent = '▲';
-      localStorage.setItem('headerExpanded', 'false');
-    }
+    // Close
+    collapsible.classList.add('is-collapsed');
+    if (arrow) arrow.textContent = '▼';
+    if (txt) txt.textContent = 'العنوان';
+    try { localStorage.setItem('header_collapsed_pref', '1'); } catch(e) {}
   }
 }
 
 function initHeaderCollapse() {
   const collapsible = document.getElementById('header-collapsible');
   const arrow = document.getElementById('header-toggle-arrow');
-  if (!collapsible || !arrow) return;
+  const txt = document.getElementById('header-toggle-text');
+  if (!collapsible) return;
 
-  const isMobile = window.innerWidth <= 768;
-  const saved = localStorage.getItem('headerExpanded');
+  let saved = null;
+  try { saved = localStorage.getItem('header_collapsed_pref'); } catch(e) {}
 
-  if (isMobile) {
-    // Mobile default: collapsed. Show expanded only if user explicitly expanded.
-    if (saved === 'true') {
-      collapsible.classList.add('expanded');
-      arrow.textContent = '▼';
-    } else {
-      collapsible.classList.remove('expanded');
-      arrow.textContent = '▲';
-    }
+  // Mobile / iPad default: collapsed (screen <= 992px)
+  // Desktop default: open
+  const isSmallScreen = window.innerWidth <= 992;
+  const shouldCollapse = saved !== null ? (saved === '1') : isSmallScreen;
+
+  if (shouldCollapse) {
+    collapsible.classList.add('is-collapsed');
+    if (arrow) arrow.textContent = '▼';
+    if (txt) txt.textContent = 'العنوان';
   } else {
-    // Desktop default: expanded. Collapse only if user explicitly collapsed.
-    if (saved === 'false') {
-      collapsible.classList.add('collapsed');
-      arrow.textContent = '▲';
-    } else {
-      collapsible.classList.remove('collapsed');
-      arrow.textContent = '▼';
-    }
+    collapsible.classList.remove('is-collapsed');
+    if (arrow) arrow.textContent = '▲';
+    if (txt) txt.textContent = 'إخفاء';
   }
 }

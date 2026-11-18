@@ -44,8 +44,10 @@
 
       <!-- Always-visible nav row with toggle button -->
       <div class="nav-row">
-        <button class="header-toggle-btn" id="header-toggle-btn" onclick="toggleHeaderBrand()" title="إظهار / إخفاء العنوان">
-          <span>🏛️</span><span id="header-toggle-arrow">▲</span>
+        <button type="button" class="header-toggle-btn" id="header-toggle-btn" onclick="toggleHeaderBrand()" title="إظهار / إخفاء تفاصيل المنصة">
+          <span>🏛️</span>
+          <span id="header-toggle-text" class="toggle-text">العنوان</span>
+          <span id="header-toggle-arrow">▼</span>
         </button>
         <nav class="nav-tabs">
           <button class="nav-btn active" data-tab="tab-register">✍️ تسجيل البيانات والتواصل</button>
@@ -657,6 +659,9 @@
     <!-- TAB 3: PUBLIC ADVANCED ANALYTICS & SUPPLY/DEMAND -->
     <!-- ======================================================== -->
     <section id="tab-analytics" class="tab-pane">
+      
+      <!-- Analytics Error Notice (shown only if server API fails) -->
+      <div id="analytics-error-notice" style="display: none;"></div>
       
       <!-- Top Title Bar -->
       <div class="card" style="margin-bottom: 1.25rem; background: linear-gradient(135deg, #f8fafc, #eff6ff); border: 1.5px solid #bfdbfe; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
