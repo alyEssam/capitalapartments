@@ -123,32 +123,46 @@ function checkAreaBracketMatch(apt, bracketKey) {
 // ============================================================
 // FLOOR LABEL HELPER - shows floor in context of building height
 // ============================================================
-function buildFloorDisplay(apt) {
-  const floor = apt.floor;
-  const maxFloor = apt.building_max_floor;
-  const baseLabel = apt.floor_label || '';
-
-  // No max floor info? Just show original label
-  if (maxFloor === null || maxFloor === undefined) return baseLabel;
-
-  // Ground floor (0) special case
-  const isGround = floor === 0;
-  const isTop = floor === maxFloor;
-  const totalFloors = maxFloor + 1; // 0-indexed: 0..maxFloor = maxFloor+1 floors
-
-  // Floor label as ordinal text
-  let floorText = baseLabel;
-
-  if (isTop && isGround) {
-    // Single-floor building
-    return `${floorText} (أرضي وأخير — عمارة ${totalFloors} دور)`;
+function buildFloorDisplay(apt, plainText = false) {
+  if (!apt) return '';
+  const floor = Number(apt.floor);
+  let maxFloor = apt.building_max_floor;
+  if (!maxFloor) {
+    const m = apt.model || '';
+    if (m === 'G3-R') maxFloor = 9;
+    else if (['C', 'D', 'B1', 'B1-R', 'B3-R', 'C2-R', 'H1', 'H1-R', 'H3', 'H3-R', 'H5'].includes(m)) maxFloor = 7;
+    else maxFloor = 5;
   }
 
-  if (isTop) {
-    return `${floorText} ✦ آخر دور (من ${totalFloors} أدوار)`;
-  } else {
-    return `${floorText} (من ${totalFloors} أدوار)`;
+  const baseLabel = apt.floor_label || (floor === 0 ? 'الدور الأرضي' : (floor === -1 ? 'دور بدروم' : `الدور ${floor}`));
+
+  // Ground floor
+  if (floor === 0) {
+    if (plainText) return `${baseLabel} (عمارة ${maxFloor} أدوار)`;
+    return `<span style="font-weight: 700; color: #475569;">${baseLabel}</span> <span style="font-size: 0.76rem; color: #64748b; font-weight: 600;">(عمارة ${maxFloor} أدوار)</span>`;
   }
+
+  // Basement floor
+  if (floor === -1) {
+    if (plainText) return `${baseLabel} (عمارة ${maxFloor} أدوار)`;
+    return `<span style="font-weight: 700; color: #64748b;">${baseLabel}</span> <span style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">(عمارة ${maxFloor} أدوار)</span>`;
+  }
+
+  // Top floor (الدور الأخير)
+  if (floor === maxFloor) {
+    if (plainText) return `${baseLabel} ✦ دور أخير (عمارة ${maxFloor} أدوار)`;
+    return `<span style="font-weight: 800; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px;">${baseLabel} ✦ دور أخير</span> <span style="font-size: 0.76rem; color: #92400e; font-weight: 700;">(عمارة ${maxFloor} أدوار)</span>`;
+  }
+
+  // Special Highlight: 5th Floor in a 7-floor or 9-floor building (متكرر وليس أخير)
+  if (floor === 5 && maxFloor > 5) {
+    if (plainText) return `الدور الخامس (متكرر وليس أخير — من ${maxFloor} أدوار)`;
+    return `<span style="font-weight: 800; color: #15803d; background: #dcfce7; border: 1px solid #86efac; padding: 1px 6px; border-radius: 4px;">الدور الخامس (متكرر وليس أخير)</span> <span style="font-size: 0.76rem; color: #166534; font-weight: 700;">(من ${maxFloor} أدوار)</span>`;
+  }
+
+  // Standard repeated floors (1, 2, 3, 4, 6, 8...)
+  if (plainText) return `${baseLabel} (من ${maxFloor} أدوار)`;
+  return `<span style="font-weight: 700; color: #0f172a;">${baseLabel}</span> <span style="font-size: 0.76rem; color: #64748b; font-weight: 600;">(من ${maxFloor} أدوار)</span>`;
 }
 document.addEventListener("DOMContentLoaded", () => {
   initHeaderCollapse();
@@ -645,7 +659,7 @@ function onBuildingSelected() {
       opt.style.color = "#dc2626";
       opt.style.backgroundColor = "#fee2e2";
     } else {
-      opt.textContent = `وحدة ${u.unit_number} - ${u.floor_label} (نموذج ${u.model} - ${u.area}م²)`;
+      opt.textContent = `وحدة ${u.unit_number} - ${buildFloorDisplay(u, true)} (نموذج ${u.model} - ${u.area}م²)`;
     }
     unitSelect.appendChild(opt);
   });
@@ -727,7 +741,8 @@ function showOwnedApartmentPreview() {
     <div><strong>المجاورة:</strong> ${apt.neighborhood}</div>
     <div><strong>رقم المبنى / العمارة:</strong> ${apt.building}</div>
     <div><strong>رقم الوحدة:</strong> <span style="font-weight: 800; color: #1e3a8a;">${apt.unit_number}</span></div>
-    <div><strong>الدور:</strong> ${apt.floor_label}</div>
+    <div><strong>ارتفاع العمارة:</strong> <span style="font-weight: 700; color: #1e3a8a;">عمارة ${(apt.building_max_floor || (apt.model === 'G3-R' ? 9 : (['C', 'D', 'B1', 'B1-R', 'B3-R', 'C2-R', 'H1', 'H1-R', 'H3', 'H3-R', 'H5'].includes(apt.model) ? 7 : 5)))} أدوار</span></div>
+    <div><strong>الدور وتوصيفه:</strong> ${buildFloorDisplay(apt)}</div>
     <div><strong>النموذج:</strong> ${apt.model}</div>
     <div><strong>المساحة:</strong> ${apt.area} م²</div>
     <div><strong>نسبة التميز:</strong> ${apt.distinction}</div>
@@ -3618,7 +3633,7 @@ function renderSmartRecommendationsGrid(recs) {
             ${distBadge} مجاورة ${apt.neighborhood} - مبنى ${apt.building} - وحدة ${apt.unit_number}
           </div>
           <div style="font-size: 0.85rem; color: #475569; margin-bottom: 0.4rem;">
-            ${apt.floor_label} | نموذج ${apt.model} (${apt.area}م²) | ${(apt.meter_price || 0).toLocaleString('ar-EG')} ج/م²
+            ${buildFloorDisplay(apt)} | نموذج ${apt.model} (${apt.area}م²) | ${(apt.meter_price || 0).toLocaleString('ar-EG')} ج/م²
           </div>
 
           <!-- Reasons match tags -->
