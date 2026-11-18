@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -26,26 +26,36 @@
   <!-- Header -->
   <header class="header">
     <div class="header-container">
-      <div class="brand">
-        <div class="brand-icon">🏛️</div>
-        <div>
-          <h1 class="brand-title">منظومة تبادل وتوفيق رغبات شقق الموظفين بالعاصمة الإدارية</h1>
-          <p class="brand-subtitle">المنصة الرسمية المعتمدة لكراسة الشروط (1,100 وحدة سكنية: الحي R3 وجاردن سيتي R5 | 900 موظف)</p>
+
+      <!-- Collapsible brand area -->
+      <div id="header-collapsible" class="header-collapsible">
+        <div class="brand">
+          <div class="brand-icon">🏛️</div>
+          <div>
+            <h1 class="brand-title">منظومة تبادل وتوفيق رغبات شقق الموظفين بالعاصمة الإدارية</h1>
+            <p class="brand-subtitle">المنصة الرسمية المعتمدة لكراسة الشروط (1,100 وحدة سكنية: الحي R3 وجاردن سيتي R5 | 900 موظف)</p>
+          </div>
+        </div>
+        <div class="countdown-badge">
+          <span>🎲</span>
+          <span id="header-phase-indicator">المرحلة الحالية: حصر الشقق الأصلية والتواصل المباشر الثنائي (One-to-One)</span>
         </div>
       </div>
 
-      <div class="countdown-badge">
-        <span>🎲</span>
-        <span id="header-phase-indicator">المرحلة الحالية: حصر الشقق الأصلية والتواصل المباشر الثنائي (One-to-One)</span>
+      <!-- Always-visible nav row with toggle button -->
+      <div class="nav-row">
+        <button class="header-toggle-btn" id="header-toggle-btn" onclick="toggleHeaderBrand()" title="إظهار / إخفاء العنوان">
+          <span>🏛️</span><span id="header-toggle-arrow">▲</span>
+        </button>
+        <nav class="nav-tabs">
+          <button class="nav-btn active" data-tab="tab-register">✍️ تسجيل البيانات والتواصل</button>
+          <button class="nav-btn" data-tab="tab-catalog">🏢 كتالوج كراسة الشروط والتواصل (1,100 وحدة)</button>
+          <button class="nav-btn" data-tab="tab-analytics">📊 المؤشرات والإحصائيات العامة</button>
+          <button class="nav-btn" data-tab="tab-results">🔍 استعلام النتيجة الرسمية</button>
+          <button class="nav-btn" data-tab="tab-admin">⚙️ لوحة الإدارة ولجنة التبديل</button>
+        </nav>
       </div>
 
-      <nav class="nav-tabs">
-        <button class="nav-btn active" data-tab="tab-register">✍️ تسجيل البيانات والتواصل</button>
-        <button class="nav-btn" data-tab="tab-catalog">🏢 كتالوج كراسة الشروط والتواصل (1,100 وحدة)</button>
-        <button class="nav-btn" data-tab="tab-analytics">📊 المؤشرات والإحصائيات العامة</button>
-        <button class="nav-btn" data-tab="tab-results">🔍 استعلام النتيجة الرسمية</button>
-        <button class="nav-btn" data-tab="tab-admin">⚙️ لوحة الإدارة ولجنة التبديل</button>
-      </nav>
     </div>
   </header>
 

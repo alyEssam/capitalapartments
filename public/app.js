@@ -1,4 +1,4 @@
-
+﻿
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
@@ -120,6 +120,7 @@ function checkAreaBracketMatch(apt, bracketKey) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  initHeaderCollapse();
   initCondolenceRibbon();
   initTabs();
   fetchSystemPhase();
@@ -4361,4 +4362,70 @@ function onCatalogSortChanged(val) {
   state.catalogSort = val;
   state.catalogPage = 1;
   renderCatalog();
+}
+
+// ============================================================
+// COLLAPSIBLE HEADER - Mobile toggle
+// ============================================================
+function toggleHeaderBrand() {
+  const collapsible = document.getElementById('header-collapsible');
+  const arrow = document.getElementById('header-toggle-arrow');
+  if (!collapsible) return;
+
+  const isMobile = window.innerWidth <= 768;
+
+  if (isMobile) {
+    // On mobile: toggle 'expanded' class (default is collapsed)
+    const isExpanded = collapsible.classList.contains('expanded');
+    if (isExpanded) {
+      collapsible.classList.remove('expanded');
+      arrow.textContent = '▲';
+      localStorage.setItem('headerExpanded', 'false');
+    } else {
+      collapsible.classList.add('expanded');
+      arrow.textContent = '▼';
+      localStorage.setItem('headerExpanded', 'true');
+    }
+  } else {
+    // On desktop: toggle 'collapsed' class (default is expanded)
+    const isCollapsed = collapsible.classList.contains('collapsed');
+    if (isCollapsed) {
+      collapsible.classList.remove('collapsed');
+      arrow.textContent = '▼';
+      localStorage.setItem('headerExpanded', 'true');
+    } else {
+      collapsible.classList.add('collapsed');
+      arrow.textContent = '▲';
+      localStorage.setItem('headerExpanded', 'false');
+    }
+  }
+}
+
+function initHeaderCollapse() {
+  const collapsible = document.getElementById('header-collapsible');
+  const arrow = document.getElementById('header-toggle-arrow');
+  if (!collapsible || !arrow) return;
+
+  const isMobile = window.innerWidth <= 768;
+  const saved = localStorage.getItem('headerExpanded');
+
+  if (isMobile) {
+    // Mobile default: collapsed. Show expanded only if user explicitly expanded.
+    if (saved === 'true') {
+      collapsible.classList.add('expanded');
+      arrow.textContent = '▼';
+    } else {
+      collapsible.classList.remove('expanded');
+      arrow.textContent = '▲';
+    }
+  } else {
+    // Desktop default: expanded. Collapse only if user explicitly collapsed.
+    if (saved === 'false') {
+      collapsible.classList.add('collapsed');
+      arrow.textContent = '▲';
+    } else {
+      collapsible.classList.remove('collapsed');
+      arrow.textContent = '▼';
+    }
+  }
 }
