@@ -288,6 +288,149 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      // Priority 1b: If user declared AGREED_DIRECT with a target apartment or partner (even if unilateral or pending partner registration)
+      if (user.swap_status === 'AGREED_DIRECT') {
+        let targetApt = null;
+        if (user.direct_target_apartment_id) {
+          targetApt = db.db.prepare("SELECT * FROM apartments WHERE id = ?").get(user.direct_target_apartment_id);
+        }
+        if (!targetApt && user.direct_partner_nid) {
+          targetApt = db.db.prepare("SELECT * FROM apartments WHERE national_property_id = ? OR code = ? OR national_property_id LIKE ?")
+            .get(user.direct_partner_nid, user.direct_partner_nid, '%' + user.direct_partner_nid);
+        }
+        if (!targetApt && user.direct_partner_user_id) {
+          const pUser = db.db.prepare("SELECT original_apartment_id FROM users WHERE id = ?").get(user.direct_partner_user_id);
+          if (pUser && pUser.original_apartment_id) {
+            targetApt = db.db.prepare("SELECT * FROM apartments WHERE id = ?").get(pUser.original_apartment_id);
+          }
+        }
+
+        const origApt = user.original_apartment_id ? db.getApartmentById(user.original_apartment_id) : null;
+        if (origApt && targetApt && Number(origApt.id) !== Number(targetApt.id)) {
+          let partnerUser = user.direct_partner_user_id 
+            ? db.db.prepare("SELECT * FROM users WHERE id = ?").get(user.direct_partner_user_id)
+            : (targetApt.original_owner_id ? db.db.prepare("SELECT * FROM users WHERE id = ?").get(targetApt.original_owner_id) : null);
+
+          const partnerObj = partnerUser ? {
+            id: partnerUser.id,
+            full_name: partnerUser.full_name,
+            national_id: partnerUser.national_id,
+            phone: partnerUser.phone,
+            workplace: partnerUser.workplace
+          } : {
+            id: null,
+            full_name: 'الزميل الطرف الثاني (بانتظار تسجيله بالمنصة)',
+            national_id: user.direct_partner_nid || '-',
+            phone: '-',
+            workplace: 'العاصمة الإدارية'
+          };
+
+          const directResult = {
+            id: user.id,
+            user_id: user.id,
+            full_name: user.full_name,
+            national_id: user.national_id,
+            phone: user.phone,
+            random_priority_number: user.random_priority_number,
+            lottery_rank: user.lottery_rank,
+            swap_type: 'DIRECT_PAIR',
+            rank_achieved: 1,
+            cycle_id: `DIRECT-SWAP-${user.id}`,
+            original_apartment_id: origApt.id,
+            assigned_apartment_id: targetApt.id,
+
+            orig_code: origApt.code,
+            orig_district: origApt.district,
+            orig_neighborhood: origApt.neighborhood,
+            orig_building: origApt.building,
+            orig_bld: origApt.building,
+            orig_floor: origApt.floor,
+            orig_floor_label: origApt.floor_label,
+            orig_fl_label: origApt.floor_label,
+            orig_unit: origApt.unit_number,
+            orig_model: origApt.model,
+            orig_area: origApt.area,
+            orig_price: origApt.meter_price,
+            orig_total_price: origApt.total_price,
+            orig_nat_id: origApt.national_property_id,
+
+            assign_code: targetApt.code,
+            assign_district: targetApt.district,
+            assign_neighborhood: targetApt.neighborhood,
+            assign_building: targetApt.building,
+            assign_bld: targetApt.building,
+            assign_floor: targetApt.floor,
+            assign_floor_label: targetApt.floor_label,
+            assign_fl_label: targetApt.floor_label,
+            assign_unit: targetApt.unit_number,
+            assign_model: targetApt.model,
+            assign_area: targetApt.area,
+            assign_price: targetApt.meter_price,
+            assign_total_price: targetApt.total_price,
+            assign_nat_id: targetApt.national_property_id,
+
+            receivingFrom: partnerObj,
+            givingTo: partnerObj,
+            statusNotice: "🤝 تم تسجيل وتأكيد التوافق الودي المباشر على هذه الشقة الجديدة بنجاح!",
+            cycleMembers: [
+              {
+                id: user.id,
+                full_name: user.full_name,
+                national_id: user.national_id,
+                phone: user.phone,
+                workplace: user.workplace,
+                orig_district: origApt.district,
+                orig_neighborhood: origApt.neighborhood,
+                orig_building: origApt.building,
+                orig_unit: origApt.unit_number,
+                orig_floor_label: origApt.floor_label,
+                orig_model: origApt.model,
+                orig_area: origApt.area,
+                orig_nat_id: origApt.national_property_id,
+                assign_district: targetApt.district,
+                assign_neighborhood: targetApt.neighborhood,
+                assign_building: targetApt.building,
+                assign_unit: targetApt.unit_number,
+                assign_floor_label: targetApt.floor_label,
+                assign_model: targetApt.model,
+                assign_area: targetApt.area,
+                assign_nat_id: targetApt.national_property_id
+              },
+              {
+                id: partnerObj.id,
+                full_name: partnerObj.full_name,
+                national_id: partnerObj.national_id,
+                phone: partnerObj.phone,
+                workplace: partnerObj.workplace,
+                orig_district: targetApt.district,
+                orig_neighborhood: targetApt.neighborhood,
+                orig_building: targetApt.building,
+                orig_unit: targetApt.unit_number,
+                orig_floor_label: targetApt.floor_label,
+                orig_model: targetApt.model,
+                orig_area: targetApt.area,
+                orig_nat_id: targetApt.national_property_id,
+                assign_district: origApt.district,
+                assign_neighborhood: origApt.neighborhood,
+                assign_building: origApt.building,
+                assign_unit: origApt.unit_number,
+                assign_floor_label: origApt.floor_label,
+                assign_model: origApt.model,
+                assign_area: origApt.area,
+                assign_nat_id: origApt.national_property_id
+              }
+            ]
+          };
+
+          return sendJson(res, 200, {
+            success: true,
+            published: true,
+            isDirectSwap: true,
+            result: directResult
+          });
+        }
+      }
+
       // Priority 2: In Phase 1 or Phase 2 (Preferences collection), official lottery has NOT been drawn yet
       const systemPhase = db.getSetting("system_phase", "PHASE_1_DIRECT");
       if (systemPhase !== "PHASE_3_RESULTS") {
