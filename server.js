@@ -820,7 +820,7 @@ const server = http.createServer(async (req, res) => {
 
     
     // 9d. Admin: Advanced Analytics (Supply & Demand breakdown)
-    if (pathname === "/api/admin/analytics" && method === "GET") {
+    if ((pathname === "/api/admin/analytics" || pathname === "/api/analytics") && method === "GET") {
       try {
         const analytics = db.getAdvancedAnalytics();
         return sendJson(res, 200, { success: true, analytics });

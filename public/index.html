@@ -42,6 +42,7 @@
       <nav class="nav-tabs">
         <button class="nav-btn active" data-tab="tab-register">✍️ تسجيل البيانات والتواصل</button>
         <button class="nav-btn" data-tab="tab-catalog">🏢 كتالوج كراسة الشروط والتواصل (1,100 وحدة)</button>
+        <button class="nav-btn" data-tab="tab-analytics">📊 المؤشرات والإحصائيات العامة</button>
         <button class="nav-btn" data-tab="tab-results">🔍 استعلام النتيجة الرسمية</button>
         <button class="nav-btn" data-tab="tab-admin">⚙️ لوحة الإدارة ولجنة التبديل</button>
       </nav>
@@ -640,7 +641,76 @@
     <!-- ======================================================== -->
     <!-- TAB 3: RESULTS LOOKUP -->
     <!-- ======================================================== -->
-    <section id="tab-results" class="tab-pane">
+    
+    <!-- ======================================================== -->
+    <!-- TAB 3: PUBLIC ADVANCED ANALYTICS & SUPPLY/DEMAND -->
+    <!-- ======================================================== -->
+    <section id="tab-analytics" class="tab-pane">
+      
+      <!-- Top Title Bar -->
+      <div class="card" style="margin-bottom: 1.25rem; background: linear-gradient(135deg, #f8fafc, #eff6ff); border: 1.5px solid #bfdbfe; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="font-weight: 800; color: #1e3a8a; font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.35rem 0;">
+              <span>📊</span>
+              <span>المؤشرات العامة وإحصائيات العرض والطلب الحية</span>
+            </h2>
+            <p style="font-size: 0.88rem; color: #475569; margin: 0; line-height: 1.5;">
+              مؤشرات حية ومباشرة لحركة تبادل شقق العاصمة الإدارية (1,100 وحدة بكراسة الشروط الرسمية - الحي R3 وحي R5) وتوزيع الرغبات الفعلية للموظفين المسجلين.
+            </p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-primary" onclick="loadAdvancedAnalytics()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; padding: 0.65rem 1.25rem; border-radius: 8px;">
+              🔄 تحديث الإحصائيات الحية
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Public Key Metrics (5 Columns) -->
+      <div class="grid-5" style="margin-bottom: 1.5rem;">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #eff6ff; color: #2563eb;">🏢</div>
+          <div>
+            <div class="stat-val" id="pub-kpi-total-apts">1,100</div>
+            <div class="stat-label">شقق كراسة الشروط (R3 & R5)</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">👥</div>
+          <div>
+            <div class="stat-val" id="pub-kpi-total-users">0</div>
+            <div class="stat-label">الموظفون المسجلون (الهدف: 900)</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #fef3c7; color: #d97706;">🔄</div>
+          <div>
+            <div class="stat-val" id="pub-kpi-wants-swap">0</div>
+            <div class="stat-label">راغبون في التبديل</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #fffbeb; color: #b45309;">🤝</div>
+          <div>
+            <div class="stat-val" id="pub-kpi-agreed-direct">0</div>
+            <div class="stat-label">تم التوافق الودي (1-to-1)</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #f1f5f9; color: #475569;">🛡️</div>
+          <div>
+            <div class="stat-val" id="pub-kpi-keeping-apt">0</div>
+            <div class="stat-label">محتفظون بشققهم الأصلية</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics Core Card -->
       <div class="card" style="max-width: 850px; margin: 0 auto;">
         <div class="card-header" style="text-align: center; display: block;">
           <h2 class="card-title" style="justify-content: center;">🔍 استعلام الموظف عن نتيجة التبادل الرسمية</h2>
@@ -962,6 +1032,26 @@
             </div>
 
           </div>
+        </div>
+
+    </section>
+
+
+    <section id="tab-results" class="tab-pane">
+      <!-- Shortcut to Public Analytics Center -->
+        <div class="card" style="border: 1.5px solid #c084fc; background: #faf5ff; margin-bottom: 1.5rem; padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h4 style="font-weight: 800; color: #6b21a8; margin: 0 0 4px 0; font-size: 1.05rem; display: flex; align-items: center; gap: 6px;">
+              <span>📊</span>
+              <span>مركز المؤشرات والتحليلات العامة (العرض والطلب والتزاحم)</span>
+            </h4>
+            <div style="font-size: 0.82rem; color: #581c87;">
+              تم تخصيص تبويب عام ومستقل للمؤشرات والإحصائيات يتيح لجميع الموظفين قراءة نسب التزاحم ومعدلات الطلب مباشرة.
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline" onclick="switchTab('tab-analytics')" style="background: white; border-color: #9333ea; color: #9333ea; font-weight: 800; font-size: 0.88rem; padding: 8px 16px; border-radius: 8px; cursor: pointer;">
+            📊 فتح صفحة المؤشرات العامة ↗️
+          </button>
         </div>
 
         <!-- LIVE ROSTER: ALL REGISTERED EMPLOYEES (132+ USERS) -->

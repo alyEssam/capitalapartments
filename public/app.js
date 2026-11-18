@@ -125,6 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchSystemPhase();
   loadApartments();
   loadStats();
+  loadAdvancedAnalytics();
   initFormListeners();
 });
 
@@ -153,6 +154,7 @@ function initTabs() {
       document.querySelectorAll(".tab-pane").forEach(pane => pane.classList.remove("active"));
       document.getElementById(targetTab).classList.add("active");
       if (targetTab === "tab-catalog") renderCatalog();
+      if (targetTab === "tab-analytics") loadAdvancedAnalytics();
       if (targetTab === "tab-admin" && state.adminLoggedIn) loadAdminData();
     });
   });
@@ -328,11 +330,21 @@ async function loadStats() {
     const data = await res.json();
     if (data.success) {
       const s = data.stats;
-      document.getElementById("kpi-total-apts").textContent = s.totalApts.toLocaleString('ar-EG');
-      document.getElementById("kpi-total-users").textContent = s.totalUsers.toLocaleString('ar-EG');
-      document.getElementById("kpi-wants-swap").textContent = s.wantingSwap.toLocaleString('ar-EG');
-      document.getElementById("kpi-agreed-direct").textContent = (s.agreedDirect || 0).toLocaleString('ar-EG');
-      document.getElementById("kpi-keeping-apt").textContent = s.keepingApt.toLocaleString('ar-EG');
+      const setKpi = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+      setKpi("kpi-total-apts", s.totalApts.toLocaleString('ar-EG'));
+      setKpi("kpi-total-users", s.totalUsers.toLocaleString('ar-EG'));
+      setKpi("kpi-wants-swap", s.wantingSwap.toLocaleString('ar-EG'));
+      setKpi("kpi-agreed-direct", (s.agreedDirect || 0).toLocaleString('ar-EG'));
+      setKpi("kpi-keeping-apt", s.keepingApt.toLocaleString('ar-EG'));
+
+      setKpi("pub-kpi-total-apts", s.totalApts.toLocaleString('ar-EG'));
+      setKpi("pub-kpi-total-users", s.totalUsers.toLocaleString('ar-EG'));
+      setKpi("pub-kpi-wants-swap", s.wantingSwap.toLocaleString('ar-EG'));
+      setKpi("pub-kpi-agreed-direct", (s.agreedDirect || 0).toLocaleString('ar-EG'));
+      setKpi("pub-kpi-keeping-apt", s.keepingApt.toLocaleString('ar-EG'));
       if (s.systemPhase) {
         state.systemPhase = s.systemPhase;
         applySystemPhaseUI(s.systemPhase);
@@ -3990,7 +4002,7 @@ let currentAnalyticsData = null;
 
 async function loadAdvancedAnalytics() {
   try {
-    const res = await fetch("/api/admin/analytics");
+    const res = await fetch("/api/analytics");
     const data = await res.json();
     if (!data.success || !data.analytics) return;
 
@@ -4003,7 +4015,7 @@ async function loadAdvancedAnalytics() {
 
 function switchAnalyticsTab(tabName) {
   document.querySelectorAll('.analytics-pane').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('#admin-dashboard-view .active-analytics-tab').forEach(el => el.classList.remove('active-analytics-tab'));
+  document.querySelectorAll('.active-analytics-tab').forEach(el => el.classList.remove('active-analytics-tab'));
 
   const pane = document.getElementById("atab-pane-" + tabName);
   if (pane) pane.style.display = 'block';
