@@ -84,7 +84,9 @@ let state = {
   catalogFloor: '',
   catalogStatus: 'all',
   catalogArea: '',
-  catalogQuery: ''
+  catalogQuery: '',
+  catalogSort: 'smart',
+  catalogSmartFilter: 'all'
 };
 
 // Global area bracket matching helper
@@ -1262,6 +1264,72 @@ function renderCatalog() {
     return true;
   });
 
+  // Smart Recommendation Map
+  const recMap = new Map();
+  (state.smartRecommendations || []).forEach(r => {
+    if (r && r.apartment) recMap.set(Number(r.apartment.id), r);
+  });
+
+  // Apply Smart Filter Tabs (All / Mutual / Recommended)
+  if (state.catalogSmartFilter === 'mutual') {
+    filtered = filtered.filter(a => recMap.get(Number(a.id))?.isMutualMatch);
+  } else if (state.catalogSmartFilter === 'recommended') {
+    filtered = filtered.filter(a => recMap.has(Number(a.id)));
+  }
+
+  // Dynamic Real-time Sorting
+  const sortSelect = document.getElementById("catalog-sort-select");
+  const sortMode = state.catalogSort || (sortSelect ? sortSelect.value : '') || (state.selectedAptId ? 'smart' : 'offered');
+  if (sortSelect && sortSelect.value !== sortMode) {
+    sortSelect.value = sortMode;
+  }
+
+  filtered.sort((a, b) => {
+    if (sortMode === 'smart') {
+      const recA = recMap.get(Number(a.id));
+      const recB = recMap.get(Number(b.id));
+
+      const getSmartWeight = (apt, rec) => {
+        if (rec) {
+          const base = rec.isMutualMatch ? 3000 : 2000;
+          return base + (rec.matchScore || 0) + (rec.isNewMatch ? 20 : 0);
+        }
+        if (apt.owner_name && apt.owner_swap_status === 'WANTS_SWAP') return 1000;
+        if (apt.owner_name && apt.owner_swap_status === 'AGREED_DIRECT') return 500;
+        if (apt.owner_name) return 300;
+        return 0; // Unregistered booklet unit
+      };
+
+      const wA = getSmartWeight(a, recA);
+      const wB = getSmartWeight(b, recB);
+      if (wA !== wB) return wB - wA;
+      return a.id - b.id;
+    } else if (sortMode === 'offered') {
+      const getOfferedWeight = (apt) => {
+        if (apt.owner_name && apt.owner_swap_status === 'WANTS_SWAP') return 3;
+        if (apt.owner_name && apt.owner_swap_status === 'AGREED_DIRECT') return 2;
+        if (apt.owner_name) return 1;
+        return 0;
+      };
+      const wA = getOfferedWeight(a);
+      const wB = getOfferedWeight(b);
+      if (wA !== wB) return wB - wA;
+      return a.id - b.id;
+    } else if (sortMode === 'newest') {
+      const timeA = a.owner_registered_at ? new Date(a.owner_registered_at).getTime() : 0;
+      const timeB = b.owner_registered_at ? new Date(b.owner_registered_at).getTime() : 0;
+      if (timeA !== timeB) return timeB - timeA;
+      return a.id - b.id;
+    } else if (sortMode === 'area_desc') {
+      return (b.area || 0) - (a.area || 0);
+    } else if (sortMode === 'area_asc') {
+      return (a.area || 0) - (b.area || 0);
+    } else {
+      // Default booklet order (1 to 1,100)
+      return a.id - b.id;
+    }
+  });
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / state.catalogPageSize));
   state.catalogPage = Math.max(1, Math.min(state.catalogPage, totalPages));
 
@@ -1379,6 +1447,36 @@ function renderCatalog() {
           عقاري: ${apt.national_property_id}
         </div>
       </div>
+
+      <!-- Smart Match & Recommendation Badge -->
+      ${(() => {
+        const rec = recMap.get(Number(apt.id));
+        if (!rec) return '';
+        if (rec.isMutualMatch) {
+          return `
+            <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1.5px solid #16a34a; border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(22,163,74,0.12);">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 1.15rem;">🤝</span>
+                <div>
+                  <div style="font-weight: 800; color: #166534; font-size: 0.82rem;">فرصة توافق مزدوج مثالي معك!</div>
+                  <div style="font-size: 0.72rem; color: #15803d;">شقتك تطابق رغبته وشقته تطابق رغبتك تماماً</div>
+                </div>
+              </div>
+              <span style="background: #16a34a; color: white; padding: 2px 8px; border-radius: 12px; font-weight: 800; font-size: 0.75rem;">تطابق ${rec.matchScore}%</span>
+            </div>
+          `;
+        } else {
+          return `
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 5px 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 1rem;">⭐</span>
+                <span style="font-weight: 800; color: #1e40af; font-size: 0.79rem;">شقة مرشحة تطابق رغباتك</span>
+              </div>
+              <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 12px; font-weight: 800; font-size: 0.73rem;">تطابق ${rec.matchScore}%</span>
+            </div>
+          `;
+        }
+      })()}
 
       <!-- Owner & Direct Contact Box -->
       ${ownerHtml}
@@ -3341,6 +3439,7 @@ async function loadSmartRecommendations(nid) {
 
     updateCatalogFilterBadges(state.smartRecommendations, state.mutualMatches);
     renderSmartRecommendationsGrid(data.recommendations);
+    if (state.currentTab === "tab-catalog") renderCatalog();
 
   } catch(e) {
     console.error("Error loading smart recommendations:", e);
@@ -4208,4 +4307,11 @@ function renderAnalyticsViews(a) {
       </table>
     `;
   }
+}
+
+
+function onCatalogSortChanged(val) {
+  state.catalogSort = val;
+  state.catalogPage = 1;
+  renderCatalog();
 }
