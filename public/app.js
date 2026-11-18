@@ -4643,11 +4643,17 @@ function onCatalogSortChanged(val) {
 // ============================================================
 // COLLAPSIBLE HEADER - Robust Multi-Device (Mobile, iPad, PC)
 // ============================================================
+let _lastHeaderToggleTime = 0;
 function toggleHeaderBrand(e) {
   if (e && e.preventDefault) {
     e.preventDefault();
-    e.stopPropagation();
   }
+  const now = Date.now();
+  if (now - _lastHeaderToggleTime < 250) {
+    return; // Prevent duplicate execution from simultaneous touch and click events
+  }
+  _lastHeaderToggleTime = now;
+
   const collapsible = document.getElementById("header-collapsible");
   const arrow = document.getElementById("header-toggle-arrow");
   const txt = document.getElementById("header-toggle-text");
@@ -4671,22 +4677,18 @@ function toggleHeaderBrand(e) {
 }
 
 function initHeaderCollapse() {
-  const btn = document.getElementById("header-toggle-btn");
   const collapsible = document.getElementById("header-collapsible");
   const arrow = document.getElementById("header-toggle-arrow");
   const txt = document.getElementById("header-toggle-text");
   if (!collapsible) return;
 
-  if (btn && !btn._hasClickListener) {
-    btn._hasClickListener = true;
-    btn.addEventListener("click", toggleHeaderBrand);
-  }
-
   let saved = null;
   try { saved = localStorage.getItem("header_collapsed_pref"); } catch(err) {}
 
-  const isSmallScreen = window.innerWidth <= 992;
-  const shouldCollapse = saved !== null ? (saved === "1") : isSmallScreen;
+  // On desktop / laptop (>768px), default to open unless user chose to collapse
+  // On mobile (<=768px), default to collapsed to save screen space
+  const isMobile = window.innerWidth <= 768;
+  const shouldCollapse = saved !== null ? (saved === "1") : isMobile;
 
   if (shouldCollapse) {
     collapsible.style.display = "none";
