@@ -1241,10 +1241,21 @@ function renderCatalog() {
     }
 
     if (state.catalogStatus !== 'all') {
-      const st = a.owner_swap_status || (a.owner_name ? 'WANTS_SWAP' : 'UNREGISTERED');
       if (state.catalogStatus === 'UNREGISTERED') {
         if (a.owner_name) return false;
+      } else if (state.catalogStatus === 'KEPT_ORIGINAL') {
+        if (!a.owner_name) return false;
+        const st = a.owner_swap_status || (a.owner_wants_swap === 0 ? 'KEPT_ORIGINAL' : 'WANTS_SWAP');
+        if (st !== 'KEPT_ORIGINAL') return false;
+      } else if (state.catalogStatus === 'WANTS_SWAP') {
+        if (!a.owner_name) return false;
+        const st = a.owner_swap_status || (a.owner_wants_swap === 1 ? 'WANTS_SWAP' : 'KEPT_ORIGINAL');
+        if (st !== 'WANTS_SWAP') return false;
+      } else if (state.catalogStatus === 'AGREED_DIRECT') {
+        if (!a.owner_name) return false;
+        if (a.owner_swap_status !== 'AGREED_DIRECT') return false;
       } else {
+        const st = a.owner_swap_status || (a.owner_name ? 'WANTS_SWAP' : 'UNREGISTERED');
         if (st !== state.catalogStatus) return false;
       }
     }
