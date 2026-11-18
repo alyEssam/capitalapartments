@@ -1562,6 +1562,11 @@ async function queryResult() {
 
     if (data.published === false) {
       if (data.inPreferencesPhase) {
+        const isPhase1 = (data.systemPhase === 'PHASE_1_DIRECT');
+        const phaseTitle = isPhase1 
+          ? 'المرحلة الأولى: الحصر والتواصل الثنائي المباشر'
+          : 'المرحلة الثانية: إدخال وتسجيل رغبات الموظفين';
+
         display.innerHTML = `
           <div style="background: #eff6ff; border: 2px solid #3b82f6; padding: 2rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
             <div style="font-size: 2.8rem; margin-bottom: 0.6rem;">⏳</div>
@@ -1569,13 +1574,32 @@ async function queryResult() {
               لم تظهر النتيجة الرسمية للتبادل بعد
             </div>
             <div style="color: #1e40af; font-size: 0.95rem; line-height: 1.6; max-width: 640px; margin: 0 auto;">
-              أهلاً أستاذ <strong>${escapeHtml(data.user?.full_name || '')}</strong>، نود إحاطتك علماً بأن المنظومة حالياً في <strong>(المرحلة الثانية: إدخال وتسجيل رغبات الموظفين)</strong>، ولم يتم اعتماد نتائج التبادل النهائي بعد.
+              أهلاً أستاذ <strong>${escapeHtml(data.user?.full_name || '')}</strong>، نود إحاطتك علماً بأن المنظومة حالياً في <strong>(${phaseTitle})</strong>، ولم يتم اعتماد نتائج التبادل النهائي بعد.
             </div>
             <div style="color: #475569; font-size: 0.85rem; margin-top: 0.5rem;">
-              سيتم إجراء التسكين والتبادل الإلكتروني الشامل واعتماد النتائج الرسمية لجميع المتقدمين فور انتهاء المهلة المحددة لتسجيل الرغبات من قبل لجنة الإسكان.
+              ${isPhase1 
+                ? 'يمكنك تصفح كتالوج كراسة الشروط والتواصل المباشر هاتفياً أو عبر واتساب مع الزملاء للتوافق الثنائي المتبادل.'
+                : 'سيتم إجراء التسكين والتبادل الإلكتروني الشامل واعتماد النتائج الرسمية لجميع المتقدمين فور انتهاء المهلة المحددة لتسجيل الرغبات من قبل لجنة الإسكان.'}
             </div>
 
-            ${(data.prefsCount > 0) ? `
+            ${isPhase1 ? `
+              <div style="margin-top: 1.25rem; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 1rem; max-width: 550px; margin-left: auto; margin-right: auto; text-align: center;">
+                <div style="font-weight: 800; color: #166534; font-size: 0.92rem;">
+                  🛡️ بياناتك وشقتك مسجلة بنجاح في المنظومة
+                </div>
+                <div style="font-size: 0.82rem; color: #15803d; margin-top: 0.35rem; line-height: 1.5;">
+                  جهة العمل: <strong>${escapeHtml(data.user?.workplace || 'غير محددة')}</strong> | الموقف: <strong>${data.user?.swap_status === 'KEPT_ORIGINAL' ? 'محتفظ بالشقة' : (data.user?.swap_status === 'AGREED_DIRECT' ? 'تم التوافق الودي' : 'متاح للتبادل والتواصل')}</strong>
+                </div>
+                <div style="text-align: center; margin-top: 0.75rem; display: flex; gap: 0.5rem; justify-content: center;">
+                  <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('tab-catalog')" style="font-size: 0.82rem; padding: 6px 16px;">
+                    🏢 تصفح المعروضات والتواصل
+                  </button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="switchTab('tab-register')" style="font-size: 0.82rem; padding: 6px 16px;">
+                    ✏️ تعديل بياناتك
+                  </button>
+                </div>
+              </div>
+            ` : ((data.prefsCount > 0) ? `
               <div style="margin-top: 1.25rem; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 1rem; max-width: 550px; margin-left: auto; margin-right: auto; text-align: right;">
                 <div style="display: flex; align-items: center; justify-content: space-between; font-weight: 800; color: #166534; font-size: 0.92rem;">
                   <span>📋 رغباتك المسجلة بالمنظومة:</span>
@@ -1602,7 +1626,7 @@ async function queryResult() {
                   ➕ تسجيل رغباتك الآن
                 </button>
               </div>
-            `}
+            `)}
           </div>
         `;
         return;
