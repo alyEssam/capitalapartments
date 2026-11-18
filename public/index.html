@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>منظومة تبادل وتوفيق رغبات شقق الموظفين | كراسة الشروط الرسمية (1,100 وحدة)</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20261118-6">
 </head>
 <body>
 
@@ -44,10 +44,10 @@
 
       <!-- Always-visible nav row with toggle button -->
       <div class="nav-row">
-        <button type="button" class="header-toggle-btn" id="header-toggle-btn" onclick="toggleHeaderBrand()" title="إظهار / إخفاء تفاصيل المنصة">
+        <button type="button" class="header-toggle-btn" id="header-toggle-btn" onclick="toggleHeaderBrand(event)" title="إظهار / إخفاء تفاصيل المنصة">
           <span>🏛️</span>
-          <span id="header-toggle-text" class="toggle-text">العنوان</span>
-          <span id="header-toggle-arrow">▼</span>
+          <span id="header-toggle-text" class="toggle-text">إخفاء العنوان</span>
+          <span id="header-toggle-arrow">▲</span>
         </button>
         <nav class="nav-tabs">
           <button class="nav-btn active" data-tab="tab-register">✍️ تسجيل البيانات والتواصل</button>
@@ -1399,7 +1399,7 @@
     </div>
   </footer>
 
-  <script src="app.js?v=20261118-4"></script>
+  <script src="app.js?v=20261118-6"></script>
 
   <!-- Employee Desires Modal -->
   <div id="desires-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; padding: 1rem;">

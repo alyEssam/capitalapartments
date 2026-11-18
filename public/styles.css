@@ -1153,6 +1153,7 @@ body {
 
 /* Single universal collapsed class - works identically on mobile, iPad, and desktop */
 .header-collapsible.is-collapsed {
+  display: none !important;
   max-height: 0 !important;
   opacity: 0 !important;
   margin: 0 !important;

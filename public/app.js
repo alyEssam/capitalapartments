@@ -4643,50 +4643,60 @@ function onCatalogSortChanged(val) {
 // ============================================================
 // COLLAPSIBLE HEADER - Robust Multi-Device (Mobile, iPad, PC)
 // ============================================================
-function toggleHeaderBrand() {
-  const collapsible = document.getElementById('header-collapsible');
-  const arrow = document.getElementById('header-toggle-arrow');
-  const txt = document.getElementById('header-toggle-text');
+function toggleHeaderBrand(e) {
+  if (e && e.preventDefault) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const collapsible = document.getElementById("header-collapsible");
+  const arrow = document.getElementById("header-toggle-arrow");
+  const txt = document.getElementById("header-toggle-text");
   if (!collapsible) return;
 
-  const isCurrentlyCollapsed = collapsible.classList.contains('is-collapsed');
+  const isHidden = collapsible.style.display === "none" || collapsible.classList.contains("is-collapsed");
 
-  if (isCurrentlyCollapsed) {
-    // Open
-    collapsible.classList.remove('is-collapsed');
-    if (arrow) arrow.textContent = '▲';
-    if (txt) txt.textContent = 'إخفاء';
-    try { localStorage.setItem('header_collapsed_pref', '0'); } catch(e) {}
+  if (isHidden) {
+    collapsible.style.display = "block";
+    collapsible.classList.remove("is-collapsed");
+    if (arrow) arrow.textContent = "▲";
+    if (txt) txt.textContent = "إخفاء العنوان";
+    try { localStorage.setItem("header_collapsed_pref", "0"); } catch(err) {}
   } else {
-    // Close
-    collapsible.classList.add('is-collapsed');
-    if (arrow) arrow.textContent = '▼';
-    if (txt) txt.textContent = 'العنوان';
-    try { localStorage.setItem('header_collapsed_pref', '1'); } catch(e) {}
+    collapsible.style.display = "none";
+    collapsible.classList.add("is-collapsed");
+    if (arrow) arrow.textContent = "▼";
+    if (txt) txt.textContent = "إظهار العنوان";
+    try { localStorage.setItem("header_collapsed_pref", "1"); } catch(err) {}
   }
 }
 
 function initHeaderCollapse() {
-  const collapsible = document.getElementById('header-collapsible');
-  const arrow = document.getElementById('header-toggle-arrow');
-  const txt = document.getElementById('header-toggle-text');
+  const btn = document.getElementById("header-toggle-btn");
+  const collapsible = document.getElementById("header-collapsible");
+  const arrow = document.getElementById("header-toggle-arrow");
+  const txt = document.getElementById("header-toggle-text");
   if (!collapsible) return;
 
-  let saved = null;
-  try { saved = localStorage.getItem('header_collapsed_pref'); } catch(e) {}
+  if (btn && !btn._hasClickListener) {
+    btn._hasClickListener = true;
+    btn.addEventListener("click", toggleHeaderBrand);
+  }
 
-  // Mobile / iPad default: collapsed (screen <= 992px)
-  // Desktop default: open
+  let saved = null;
+  try { saved = localStorage.getItem("header_collapsed_pref"); } catch(err) {}
+
   const isSmallScreen = window.innerWidth <= 992;
-  const shouldCollapse = saved !== null ? (saved === '1') : isSmallScreen;
+  const shouldCollapse = saved !== null ? (saved === "1") : isSmallScreen;
 
   if (shouldCollapse) {
-    collapsible.classList.add('is-collapsed');
-    if (arrow) arrow.textContent = '▼';
-    if (txt) txt.textContent = 'العنوان';
+    collapsible.style.display = "none";
+    collapsible.classList.add("is-collapsed");
+    if (arrow) arrow.textContent = "▼";
+    if (txt) txt.textContent = "إظهار العنوان";
   } else {
-    collapsible.classList.remove('is-collapsed');
-    if (arrow) arrow.textContent = '▲';
-    if (txt) txt.textContent = 'إخفاء';
+    collapsible.style.display = "block";
+    collapsible.classList.remove("is-collapsed");
+    if (arrow) arrow.textContent = "▲";
+    if (txt) txt.textContent = "إخفاء العنوان";
   }
 }
